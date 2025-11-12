@@ -200,7 +200,9 @@ h2 {
   display: grid;
   gap: 1.5rem;
   max-width: 1200px;
-  grid-template-columns: repeat(3, 1fr);
+  /* 3 columnas con tamaño mínimo fijo (c/u mínimo ~420px), ocupan 1fr si hay espacio */
+  grid-template-columns: repeat(3, minmax(420px, 1fr));
+  justify-content: center;
 }
 
 .card-actions {
