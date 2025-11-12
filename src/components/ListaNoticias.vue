@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getListaNoticias, deleteNoticia } from '../backend/noticiaService.js'
+import { getListaNoticias, deleteNoticia, getNoticiaByTitulo } from '../backend/noticiaService.js'
 import { getImagenesPorNoticia } from '../backend/imagenService.js'
 import { pb, SUPERUSER } from '../backend/pb.js'
 
@@ -9,6 +9,7 @@ const noticiasImages = ref({})
 const loading = ref(false)
 const error = ref(null)
 const expandedNoticiaId = ref(null)
+const searchTerm = ref('')
 
 async function loadNoticias() {
   loading.value = true
@@ -76,6 +77,35 @@ onMounted(() => {
   loadNoticias()
 })
 
+// búsqueda por título (usa el método del servicio)
+async function performSearch() {
+  loading.value = true
+  error.value = null
+  try {
+    if (searchTerm.value && searchTerm.value.trim().length > 0) {
+      const lista = await getNoticiaByTitulo(searchTerm.value.trim())
+      noticias.value = lista.slice().reverse()
+    } else {
+      const lista = await getListaNoticias()
+      noticias.value = lista.slice().reverse()
+    }
+
+    // precargar imágenes para los resultados
+    for (const n of noticias.value) {
+      try {
+        const imgs = await getImagenesPorNoticia(n.id)
+        noticiasImages.value[n.id] = imgs
+      } catch (err) {
+        noticiasImages.value[n.id] = []
+      }
+    }
+  } catch (err) {
+    error.value = err.message || String(err)
+  } finally {
+    loading.value = false
+  }
+}
+
 function getNewsImageUrl(imagen) {
   if (!imagen?.url) return null
   return `${pb.baseUrl}/api/files/imagenes_noticias/${imagen.id}/${imagen.url}`
@@ -87,7 +117,13 @@ function getNewsImageUrl(imagen) {
   <section class="lista-noticias">
     <h2>Listado de noticias</h2>
 
-    <div v-if="loading">Cargando noticias...</div>
+      <!-- Búsqueda: entre el título y las tarjetas -->
+      <div class="search-row">
+        <input v-model="searchTerm" @keyup.enter="performSearch" placeholder="Buscar noticias por título..." />
+        <button class="btn" @click="performSearch">Buscar</button>
+      </div>
+
+      <div v-if="loading">Cargando noticias...</div>
     <div v-else-if="error" class="error">
       <div>Error: {{ error }}</div>
       <div v-if="isSuperuserError(error)">
@@ -167,6 +203,7 @@ export function isSuperuserError(err) {
 .btn-mas-detalles { padding:.6rem 1.2rem; background:#28a745; color:#fff; border:none; border-radius:4px }
 .contenido-noticia {
   display: -webkit-box;
+  line-clamp: 5;
   -webkit-line-clamp: 5; /* Limita a 5 líneas */
   -webkit-box-orient: vertical;
   overflow: hidden;

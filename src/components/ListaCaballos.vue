@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getListaCaballos, deleteCaballo } from '../backend/caballoService.js'
+import { getListaCaballos, deleteCaballo, getCaballoByText } from '../backend/caballoService.js'
 import { getImagenesPorCaballo } from '../backend/imagenService.js'
 import { pb, SUPERUSER } from '../backend/pb.js'
 
@@ -9,6 +9,7 @@ const loading = ref(false)
 const error = ref(null)
 const expandedCaballoId = ref(null)
 const caballoImages = ref({}) // { [caballoId]: [images...] }
+const searchTerm = ref('')
 
 async function loadCaballos() {
   loading.value = true
@@ -84,13 +85,48 @@ async function loginAsSuperuser() {
 onMounted(() => {
   loadCaballos()
 })
+
+// búsqueda: usa el servicio si hay texto, o recarga el listado completo
+async function performSearch() {
+  loading.value = true
+  error.value = null
+  try {
+    if (searchTerm.value && searchTerm.value.trim().length > 0) {
+      const lista = await getCaballoByText(searchTerm.value.trim())
+      caballos.value = lista.slice().reverse()
+    } else {
+      const lista = await getListaCaballos()
+      caballos.value = lista.slice().reverse()
+    }
+
+    // precargar imágenes para los resultados
+    for (const caballo of caballos.value) {
+      try {
+        const images = await getImagenesPorCaballo(caballo.id)
+        caballoImages.value[caballo.id] = images
+      } catch (err) {
+        caballoImages.value[caballo.id] = []
+      }
+    }
+  } catch (err) {
+    error.value = err.message || String(err)
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
   <section class="lista-caballos">
     <h2>Listado de caballos</h2>
 
-    <div v-if="loading">Cargando caballos...</div>
+      <!-- Búsqueda: entre el título y las tarjetas -->
+      <div class="search-row">
+        <input v-model="searchTerm" @keyup.enter="performSearch" placeholder="Buscar caballos por nombre..." />
+        <button class="btn" @click="performSearch">Buscar</button>
+      </div>
+
+      <div v-if="loading">Cargando caballos...</div>
     <div v-else-if="error" class="error">
       <div>Error: {{ error }}</div>
       <div v-if="isSuperuserError(error)">
