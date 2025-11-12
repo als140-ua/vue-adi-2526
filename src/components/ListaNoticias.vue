@@ -158,34 +158,39 @@ function getNewsImageUrl(imagen) {
     <div v-else>
       <div v-if="noticias.length === 0">No hay noticias disponibles.</div>
       <div v-else class="noticias-container">
-        <div v-for="n in visibleNoticias" :key="n.id" class="noticia-card">
-          <div class="noticia-card-main">
-            <div class="noticia-image">
-              <template v-if="noticiasImages[n.id] && noticiasImages[n.id].length">
-                <img :src="getNewsImageUrl(noticiasImages[n.id][0])" :alt="`Imagen noticia ${n.titulo}`" />
-              </template>
-              <div v-else class="noticia-imagen-placeholder">Sin imagen</div>
-            </div>
-            <div class="noticia-info">
-              <h3 class="titulo">{{ n.titulo }}</h3>
-              <div class="meta"><small v-if="n.fecha">{{ new Date(n.fecha).toLocaleDateString() }}</small></div>
-            </div>
-          </div>
+        <div v-for="n in visibleNoticias" :key="n.id" class="noticia-card" :class="{ expanded: expandedNoticiaId === n.id }">
+		  <!-- Contenido existente de la tarjeta -->
+		  <div class="card-content">
+			<div class="noticia-card-main">
+				<div class="noticia-image">
+				<template v-if="noticiasImages[n.id] && noticiasImages[n.id].length">
+					<img :src="getNewsImageUrl(noticiasImages[n.id][0])" :alt="`Imagen noticia ${n.titulo}`" />
+				</template>
+				<div v-else class="noticia-imagen-placeholder">Sin imagen</div>
+				</div>
+				<div class="noticia-info">
+				<h3 class="titulo">{{ n.titulo }}</h3>
+				<div class="meta"><small v-if="n.fecha">{{ new Date(n.fecha).toLocaleDateString() }}</small></div>
+				</div>
+			</div>
 
-          <div class="card-actions">
-            <button @click="toggleDetalles(n.id)" class="btn-detalles">
-              {{ expandedNoticiaId === n.id ? 'Ocultar detalles' : 'Detalles' }}
-            </button>
-            <button class="btn-eliminar" @click="eliminarNoticia(n.id)">✕</button>
-          </div>
+			<div class="card-actions">
+				<button @click="toggleDetalles(n.id)" class="btn-detalles">
+				{{ expandedNoticiaId === n.id ? 'Ocultar detalles' : 'Detalles' }}
+				</button>
+				<button class="btn-eliminar" @click="eliminarNoticia(n.id)">✕</button>
+			</div>
+		  </div>
 
-          <div v-if="expandedNoticiaId === n.id" class="detalles-panel">
-            <div class="detalles-grid">
-              <div class="detalle-item">
-                <span class="value contenido-noticia">{{ n.contenido }}</span>
-              </div>
-            </div>
-            <button class="btn-mas-detalles">Más detalles</button>
+          <div v-if="expandedNoticiaId === n.id" class="detalles-panel-overlay">
+			<div class="detalles-panel-content">
+				<div class="detalles-grid">
+				<div class="detalle-item">
+					<span class="value contenido-noticia">{{ n.contenido }}</span>
+				</div>
+				</div>
+				<button class="btn-mas-detalles">Más detalles</button>
+			</div>
           </div>
         </div>
       </div>
@@ -293,5 +298,54 @@ export function isSuperuserError(err) {
   border-radius: 8px;
   font-size: 1rem;
   white-space: nowrap;
+}
+
+.noticia-card {
+  position: relative;
+  margin-bottom: 0;
+}
+
+.noticia-card.expanded {
+  z-index: 10;
+}
+
+.card-content {
+  position: relative;
+  z-index: 2;
+  background: #fff;
+}
+
+.detalles-panel-overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  margin-top: 0.5rem;
+}
+
+.detalles-panel-content {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-left: 4px solid #007bff;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.noticias-container {
+  position: relative;
 }
 </style>

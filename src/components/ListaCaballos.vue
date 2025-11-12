@@ -160,73 +160,77 @@ async function performSearch() {
     <div v-else>
       <div v-if="caballos.length === 0">No hay caballos disponibles.</div>
       <div v-else class="caballos-container">
-        <div v-for="c in visibleCaballos" :key="c.id" class="caballo-card">
-          <!-- Fila principal: nombre + descripción + imagen -->
-          <div class="caballo-header">
-            <div class="caballo-info">
-              <h3>{{ c.nombre }}</h3>
-              <p v-if="c.descripcion" class="descripcion">{{ c.descripcion }}</p>
-            </div>
-            <div v-if="caballoImages[c.id]?.length > 0" class="caballo-imagen">
-			<img 
-				:src="getImageUrl(caballoImages[c.id][0])" 
-				:alt="`Imagen de ${c.nombre}`" 
-				class="imagen-thumb"
-			>
+        <div v-for="c in visibleCaballos" :key="c.id" class="caballo-card" :class="{ expanded: expandedCaballoId === c.id }">
+		  <!-- Contenido existente de la tarjeta -->
+		  <div class="card-content">
+			<div class="caballo-header">
+				<div class="caballo-info">
+				<h3>{{ c.nombre }}</h3>
+				<p v-if="c.descripcion" class="descripcion">{{ c.descripcion }}</p>
+				</div>
+				<div v-if="caballoImages[c.id]?.length > 0" class="caballo-imagen">
+				<img 
+					:src="getImageUrl(caballoImages[c.id][0])" 
+					:alt="`Imagen de ${c.nombre}`" 
+					class="imagen-thumb"
+				>
+				</div>
+				<div v-else class="caballo-imagen-placeholder">
+				<span>Sin imagen</span>
+				</div>
 			</div>
-            <div v-else class="caballo-imagen-placeholder">
-              <span>Sin imagen</span>
-            </div>
-          </div>
 
-          <!-- Botones: detalles + eliminar -->
-          <div class="card-actions">
-            <button 
-              @click="toggleDetalles(c.id)" 
-              class="btn-detalles"
-            >
-              {{ expandedCaballoId === c.id ? 'Ocultar detalles' : 'Detalles' }}
-            </button>
-            <button class="btn-eliminar" @click="eliminarCaballo(c.id)" title="Eliminar caballo">✕</button>
-          </div>
+			<!-- Botones: detalles + eliminar -->
+			<div class="card-actions">
+				<button 
+				@click="toggleDetalles(c.id)" 
+				class="btn-detalles"
+				>
+				{{ expandedCaballoId === c.id ? 'Ocultar detalles' : 'Detalles' }}
+				</button>
+				<button class="btn-eliminar" @click="eliminarCaballo(c.id)" title="Eliminar caballo">✕</button>
+			</div>
+		  </div>
 
           <!-- Panel expandible con detalles adicionales -->
-          <div v-if="expandedCaballoId === c.id" class="detalles-panel">
-            <div class="detalles-grid">
-              <div v-if="c.color" class="detalle-item">
-                <span class="label">Color:</span>
-                <span class="value">{{ c.color }}</span>
-              </div>
-              <div v-if="c.sexo" class="detalle-item">
-                <span class="label">Sexo:</span>
-                <span class="value">{{ c.sexo }}</span>
-              </div>
-              <div v-if="c.fecha_nacimiento" class="detalle-item">
-                <span class="label">Nacimiento:</span>
-                <span class="value">{{ c.fecha_nacimiento }}</span>
-              </div>
-              <div v-if="c.fecha_retiramiento" class="detalle-item">
-                <span class="label">Retiramiento:</span>
-                <span class="value">{{ c.fecha_retiramiento }}</span>
-              </div>
-              <div v-if="c.fecha_fallecimiento" class="detalle-item">
-                <span class="label">Fallecimiento:</span>
-                <span class="value">{{ c.fecha_fallecimiento }}</span>
-              </div>
-              <div v-if="c.duenyo" class="detalle-item">
-                <span class="label">Dueño:</span>
-                <span class="value">{{ c.duenyo }}</span>
-              </div>
-              <div v-if="c.entrenador" class="detalle-item">
-                <span class="label">Entrenador:</span>
-                <span class="value">{{ c.entrenador }}</span>
-              </div>
-              <div v-if="c.hogar" class="detalle-item">
-                <span class="label">Hogar:</span>
-                <span class="value">{{ c.hogar }}</span>
-              </div>
-            </div>
-            <button class="btn-mas-detalles">Más detalles</button>
+          <div v-if="expandedCaballoId === c.id" class="detalles-panel-overlay">
+			<div class="detalles-panel-content">
+				<div class="detalles-grid">
+				<div v-if="c.color" class="detalle-item">
+					<span class="label">Color:</span>
+					<span class="value">{{ c.color }}</span>
+				</div>
+				<div v-if="c.sexo" class="detalle-item">
+					<span class="label">Sexo:</span>
+					<span class="value">{{ c.sexo }}</span>
+				</div>
+				<div v-if="c.fecha_nacimiento" class="detalle-item">
+					<span class="label">Nacimiento:</span>
+					<span class="value">{{ c.fecha_nacimiento }}</span>
+				</div>
+				<div v-if="c.fecha_retiramiento" class="detalle-item">
+					<span class="label">Retiramiento:</span>
+					<span class="value">{{ c.fecha_retiramiento }}</span>
+				</div>
+				<div v-if="c.fecha_fallecimiento" class="detalle-item">
+					<span class="label">Fallecimiento:</span>
+					<span class="value">{{ c.fecha_fallecimiento }}</span>
+				</div>
+				<div v-if="c.duenyo" class="detalle-item">
+					<span class="label">Dueño:</span>
+					<span class="value">{{ c.duenyo }}</span>
+				</div>
+				<div v-if="c.entrenador" class="detalle-item">
+					<span class="label">Entrenador:</span>
+					<span class="value">{{ c.entrenador }}</span>
+				</div>
+				<div v-if="c.hogar" class="detalle-item">
+					<span class="label">Hogar:</span>
+					<span class="value">{{ c.hogar }}</span>
+				</div>
+				</div>
+            	<button class="btn-mas-detalles">Más detalles</button>
+			</div>
           </div>
         </div>
       </div>
@@ -502,5 +506,55 @@ h2 {
   border-radius: 8px;
   font-size: 1rem;
   white-space: nowrap;
+}
+.caballo-card {
+  position: relative;
+  margin-bottom: 0; /* Eliminamos el margen inferior ya que el overlay lo manejará */
+}
+
+.caballo-card.expanded {
+  z-index: 10; /* Asegura que la tarjeta expandida esté por encima */
+}
+
+.card-content {
+  position: relative;
+  z-index: 2;
+  background: #fff; /* Fondo sólido para que el overlay no se vea detrás */
+}
+
+.detalles-panel-overlay {
+  position: absolute;
+  top: 100%; /* Se posiciona justo debajo de la tarjeta */
+  left: 0;
+  right: 0;
+  z-index: 1;
+  margin-top: 0.5rem; /* Pequeño espacio entre la tarjeta y el overlay */
+}
+
+.detalles-panel-content {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-left: 4px solid #007bff;
+  animation: slideDown 0.3s ease;
+}
+
+/* Ajustar la animación para el nuevo overlay */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Asegurar que el contenedor de tarjetas tenga posición relativa para el contexto de posicionamiento */
+.caballos-container {
+  position: relative;
 }
 </style>
