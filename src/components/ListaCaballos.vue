@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { getListaCaballos, deleteCaballo, getCaballoByText } from '../backend/caballoService.js'
 import { getImagenesPorCaballo } from '../backend/imagenService.js'
 import { pb, SUPERUSER } from '../backend/pb.js'
@@ -10,6 +10,14 @@ const error = ref(null)
 const expandedCaballoId = ref(null)
 const caballoImages = ref({}) // { [caballoId]: [images...] }
 const searchTerm = ref('')
+const pageSize = 9
+const currentPage = ref(1)
+
+const totalPages = computed(() => Math.max(1, Math.ceil(caballos.value.length / pageSize)))
+const visibleCaballos = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return caballos.value.slice(start, start + pageSize)
+})
 
 async function loadCaballos() {
   loading.value = true
@@ -50,6 +58,10 @@ async function eliminarCaballo(id) {
     caballos.value = caballos.value.filter(c => c.id !== id)
     delete caballoImages.value[id]
     if (expandedCaballoId.value === id) expandedCaballoId.value = null
+    // si la página actual queda vacía tras borrar, retroceder una página si es posible
+    if (visibleCaballos.value.length === 0 && currentPage.value > 1) {
+      currentPage.value--
+    }
   } catch (err) {
     console.error('Error eliminando caballo:', err)
     error.value = err.message || String(err)
@@ -57,6 +69,9 @@ async function eliminarCaballo(id) {
     loading.value = false
   }
 }
+
+function goPrev() { if (currentPage.value > 1) currentPage.value-- }
+function goNext() { if (currentPage.value < totalPages.value) currentPage.value++ }
 
 function getImageUrl(imagen) {
   if (!imagen?.url) return null
@@ -99,7 +114,9 @@ async function performSearch() {
       caballos.value = lista.slice().reverse()
     }
 
-    // precargar imágenes para los resultados
+  // reset page to first
+  currentPage.value = 1
+  // precargar imágenes para los resultados
     for (const caballo of caballos.value) {
       try {
         const images = await getImagenesPorCaballo(caballo.id)
@@ -139,7 +156,7 @@ async function performSearch() {
     <div v-else>
       <div v-if="caballos.length === 0">No hay caballos disponibles.</div>
       <div v-else class="caballos-container">
-        <div v-for="c in caballos" :key="c.id" class="caballo-card">
+        <div v-for="c in visibleCaballos" :key="c.id" class="caballo-card">
           <!-- Fila principal: nombre + descripción + imagen -->
           <div class="caballo-header">
             <div class="caballo-info">
@@ -208,6 +225,13 @@ async function performSearch() {
             <button class="btn-mas-detalles">Más detalles</button>
           </div>
         </div>
+      </div>
+
+      <!-- Paginación: flechas debajo de las tarjetas -->
+      <div class="pagination" v-if="totalPages > 1">
+        <button class="page-btn" @click="goPrev" :disabled="currentPage === 1">‹</button>
+        <span class="page-info">Página {{ currentPage }} / {{ totalPages }}</span>
+        <button class="page-btn" @click="goNext" :disabled="currentPage === totalPages">›</button>
       </div>
     </div>
   </section>
@@ -438,4 +462,10 @@ h2 {
 .btn:hover {
   background: #ffb300;
 }
+
+/* Pagination styles */
+.pagination { display:flex; gap:.75rem; align-items:center; justify-content:center; margin-top:1rem }
+.page-btn { padding:.4rem .8rem; border-radius:4px; border:1px solid #ccc; background:#fff; cursor:pointer }
+.page-btn:disabled { opacity:.45; cursor:not-allowed }
+.page-info { font-weight:600 }
 </style>

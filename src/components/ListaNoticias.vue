@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { getListaNoticias, deleteNoticia, getNoticiaByTitulo } from '../backend/noticiaService.js'
 import { getImagenesPorNoticia } from '../backend/imagenService.js'
 import { pb, SUPERUSER } from '../backend/pb.js'
@@ -10,6 +10,14 @@ const loading = ref(false)
 const error = ref(null)
 const expandedNoticiaId = ref(null)
 const searchTerm = ref('')
+const pageSize = 9
+const currentPage = ref(1)
+
+const totalPages = computed(() => Math.max(1, Math.ceil(noticias.value.length / pageSize)))
+const visibleNoticias = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return noticias.value.slice(start, start + pageSize)
+})
 
 async function loadNoticias() {
   loading.value = true
@@ -46,7 +54,11 @@ async function eliminarNoticia(id) {
     await deleteNoticia(id)
     noticias.value = noticias.value.filter(n => n.id !== id)
     if (expandedNoticiaId.value === id) expandedNoticiaId.value = null
-      delete noticiasImages.value[id]
+    delete noticiasImages.value[id]
+    // si la página actual queda vacía tras borrar, retroceder una página si es posible
+    if (visibleNoticias.value.length === 0 && currentPage.value > 1) {
+      currentPage.value--
+    }
   } catch (err) {
     console.error('Error eliminando noticia:', err)
     error.value = err.message || String(err)
@@ -54,6 +66,9 @@ async function eliminarNoticia(id) {
     loading.value = false
   }
 }
+
+function goPrev() { if (currentPage.value > 1) currentPage.value-- }
+function goNext() { if (currentPage.value < totalPages.value) currentPage.value++ }
 
 async function loginAsSuperuser() {
   loading.value = true
@@ -90,6 +105,8 @@ async function performSearch() {
       noticias.value = lista.slice().reverse()
     }
 
+    // reset page to first
+    currentPage.value = 1
     // precargar imágenes para los resultados
     for (const n of noticias.value) {
       try {
@@ -137,7 +154,7 @@ function getNewsImageUrl(imagen) {
     <div v-else>
       <div v-if="noticias.length === 0">No hay noticias disponibles.</div>
       <div v-else class="noticias-container">
-        <div v-for="n in noticias" :key="n.id" class="noticia-card">
+        <div v-for="n in visibleNoticias" :key="n.id" class="noticia-card">
           <div class="noticia-card-main">
             <div class="noticia-image">
               <template v-if="noticiasImages[n.id] && noticiasImages[n.id].length">
@@ -167,6 +184,13 @@ function getNewsImageUrl(imagen) {
             <button class="btn-mas-detalles">Más detalles</button>
           </div>
         </div>
+      </div>
+
+      <!-- Paginación debajo de las tarjetas -->
+      <div class="pagination" v-if="totalPages > 1">
+        <button class="page-btn" @click="goPrev" :disabled="currentPage === 1">‹</button>
+        <span class="page-info">Página {{ currentPage }} / {{ totalPages }}</span>
+        <button class="page-btn" @click="goNext" :disabled="currentPage === totalPages">›</button>
       </div>
     </div>
   </section>
@@ -231,4 +255,9 @@ export function isSuperuserError(err) {
 
 /* helper image URL builder for noticias */
 .noticia-card .titulo, .noticia-card .meta { color: #222 }
+/* Pagination styles (same look as caballos) */
+.pagination { display:flex; gap:.75rem; align-items:center; justify-content:center; margin-top:1rem }
+.page-btn { padding:.4rem .8rem; border-radius:4px; border:1px solid #ccc; background:#fff; cursor:pointer }
+.page-btn:disabled { opacity:.45; cursor:not-allowed }
+.page-info { font-weight:600 }
 </style>
