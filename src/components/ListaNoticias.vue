@@ -134,13 +134,17 @@ function getNewsImageUrl(imagen) {
   <section class="lista-noticias">
     <h2>Listado de noticias</h2>
 
-      <!-- Búsqueda: entre el título y las tarjetas -->
-      <div class="search-row">
-        <input v-model="searchTerm" @keyup.enter="performSearch" placeholder="Buscar noticias por título..." />
-        <button class="btn" @click="performSearch">Buscar</button>
-      </div>
+	<div class="search-row">
+		<input 
+			v-model="searchTerm" 
+			@keyup.enter="performSearch" 
+			placeholder="Buscar noticias por título..." 
+			class="search-input"
+		/>
+		<button class="btn search-btn" @click="performSearch">Buscar</button>
+	</div>
 
-      <div v-if="loading">Cargando noticias...</div>
+    <div v-if="loading">Cargando noticias...</div>
     <div v-else-if="error" class="error">
       <div>Error: {{ error }}</div>
       <div v-if="isSuperuserError(error)">
@@ -260,4 +264,34 @@ export function isSuperuserError(err) {
 .page-btn { padding:.4rem .8rem; border-radius:4px; border:1px solid #ccc; background:#fff; cursor:pointer }
 .page-btn:disabled { opacity:.45; cursor:not-allowed }
 .page-info { font-weight:600 }
+.search-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  margin-top: 1.5rem;
+  width: 100%;
+  max-width: 600px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.search-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  white-space: nowrap;
+}
 </style>
