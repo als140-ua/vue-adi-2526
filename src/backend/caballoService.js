@@ -136,6 +136,15 @@ export async function getCaballoByText(nombre) {
   }
 }
 
+export async function getCaballoById(id) {
+  try {
+    const caballo = await pb.collection("caballos").getOne(id);
+    return caballo;
+  } catch (err) {
+    console.error("Error al obtener caballo por ID:", err);
+    throw err;
+  }
+}
 
 /** 
  * Edita un caballo existente a partir de su id
