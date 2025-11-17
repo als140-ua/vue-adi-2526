@@ -1,5 +1,39 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { logout } from './backend/userService'
+import { pb } from './backend/pb'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+
+const router = useRouter()
+const isLoggedIn = ref(!!(pb?.authStore?.isValid))
+let unsubscribe
+
+onMounted(() => {
+  if (pb?.authStore?.onChange) {
+    unsubscribe = pb.authStore.onChange(() => {
+      isLoggedIn.value = !!pb.authStore.isValid
+    }, true)
+  } else {
+    isLoggedIn.value = !!(pb?.authStore?.isValid)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (typeof unsubscribe === 'function') unsubscribe()
+})
+
+
+
+const handleLogout = async () => {
+  try {
+    await logout()
+  } finally {
+    if (pb && pb.authStore && typeof pb.authStore.clear === 'function') {
+      pb.authStore.clear()
+    }
+    router.push('/login')
+  }
+}
 </script>
 
 <template>
@@ -8,6 +42,10 @@ import { RouterLink, RouterView } from 'vue-router'
       <nav class="main-nav">
         <RouterLink to="/">Caballos</RouterLink>
         <RouterLink to="/noticias">Noticias</RouterLink>
+        <RouterLink to="/crear-caballo">Crear Caballo</RouterLink>
+        <RouterLink to="/crear-noticia">Crear Noticia</RouterLink>
+        <RouterLink v-if="!isLoggedIn" to="/login">Iniciar sesión</RouterLink>
+        <a v-else href="#" @click.prevent="handleLogout">Cerrar sesión</a>
       </nav>
     </header>
 

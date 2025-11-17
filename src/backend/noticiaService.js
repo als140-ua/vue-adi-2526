@@ -92,6 +92,34 @@ export async function getNoticiaByTitulo(titulo) {
   }
 }
 
+/** Obtener una noticia por su ID 
+ *  @param {string} id - ID de la noticia
+ *  @returns {Object} Noticia que coincide con el ID proporcionado
+ */
+export async function getNoticiaById(id) {
+  try {
+    const noticia = await pb.collection("noticias").getOne(id);
+    return noticia;
+  } catch (err) {
+    console.error("Error al obtener noticia por ID:", err);
+    throw err;
+  }
+}
+
+/** Obtener una noticia-caballo por su ID
+ * @param {string} id - ID de la noticia-caballo
+ * @returns {Object} Noticia-caballo que coincide con el ID proporcionado
+ */
+export async function getNoticiaCaballoById(id) {
+  try {
+    const noticiaCaballo = await pb.collection("noticia_caballo").getOne(id);
+    return noticiaCaballo;
+  } catch (err) {
+    console.error("Error al obtener noticia_caballo por ID:", err);
+    throw err;
+  } 
+}
+
 /** 
  * Editar una noticia por id
  * @param {string} id - ID de la noticia a editar

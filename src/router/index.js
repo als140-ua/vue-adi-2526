@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/CaballosView.vue'
+import LoginView from '@/views/LoginView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,6 +18,31 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/NoticiasView.vue'),
     },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginView,
+    },
+    {
+      path: '/crear-caballo',
+      name: 'crear-caballo',
+      component: () => import('../views/CrearCaballo.vue'),
+    },
+    {
+      path: '/editar-caballo/:id',
+      name: 'editar-caballo',
+      component: () => import('../views/EditarCaballo.vue'),
+    },
+    {
+      path: '/crear-noticia',
+      name: 'crear-noticia',
+      component: () => import('../views/CrearNoticia.vue'),
+    },
+    {
+      path: '/editar-noticia/:id',
+      name: 'editar-noticia',
+      component: () => import('../views/EditarNoticia.vue'),
+    }
   ],
 })
 

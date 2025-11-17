@@ -4,6 +4,8 @@ import { getListaNoticias, deleteNoticia, getNoticiaByTitulo } from '../backend/
 import { getImagenesPorNoticia } from '../backend/imagenService.js'
 import { pb, SUPERUSER } from '../backend/pb.js'
 
+import { useRouter } from 'vue-router'
+
 /*
   Componente: ListaNoticias
   - Propósito: mostrar un listado paginado de noticias con búsqueda, detalles expandibles
@@ -65,6 +67,12 @@ const isSuperuserErr = computed(() => {
   return text.includes('superuser') || text.includes('superusuario') || text.includes('solo super') || text.includes('only super')
 })
 
+/**
+ * Router para navegación entre páginas. Usado en editarNoticia para acceder 
+ * a la vista de edición de la noticia correspondiente.
+ */
+const router = useRouter()
+
 async function loadNoticias() {
   loading.value = true
   error.value = null
@@ -91,6 +99,11 @@ async function loadNoticias() {
 
 function toggleDetalles(noticiaId) {
   expandedNoticiaId.value = expandedNoticiaId.value === noticiaId ? null : noticiaId
+}
+
+async function editarNoticia(id) {
+  // Navegar a la vista de edición de noticia
+  router.push(`/editar-noticia/${id}`)
 }
 
 async function eliminarNoticia(id) {
@@ -233,6 +246,7 @@ function getNewsImageUrl(imagen) {
                     <button @click="toggleDetalles(n.id)" class="btn-detalles">
                       {{ expandedNoticiaId === n.id ? 'Ocultar detalles' : 'Detalles' }}
                     </button>
+                    <button @click="editarNoticia(n.id)" class="btn-editar">✎</button>
                     <button class="btn-eliminar" @click="eliminarNoticia(n.id)">✕</button>
                   </div>
                 </div>
@@ -299,6 +313,7 @@ Acciones y botones
 */
 .card-actions { display:flex; gap:.5rem; margin-top:.5rem }
 .btn-detalles { padding:.6rem 1.2rem; background:#007bff; color:#fff; border:none; border-radius:4px }
+.btn-editar { padding:.45rem .8rem; background:#ffc107; color:#212529; border:none; border-radius:4px }
 .btn-eliminar { padding:.45rem .8rem; background:#dc3545; color:#fff; border:none; border-radius:4px }
 
 /*
