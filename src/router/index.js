@@ -32,6 +32,16 @@ const router = createRouter({
       path: '/editar-caballo/:id',
       name: 'editar-caballo',
       component: () => import('../views/EditarCaballo.vue'),
+    },
+    {
+      path: '/crear-noticia',
+      name: 'crear-noticia',
+      component: () => import('../views/CrearNoticia.vue'),
+    },
+    {
+      path: '/editar-noticia/:id',
+      name: 'editar-noticia',
+      component: () => import('../views/EditarNoticia.vue'),
     }
   ],
 })

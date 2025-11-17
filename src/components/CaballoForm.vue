@@ -107,3 +107,34 @@ function onSubmit() {
     </form>
   </div>
 </template>
+
+<style scoped>
+.caballo-form {
+    min-width: 500px;
+    margin: auto;
+}
+
+.caballo-form div {
+    margin-bottom: 1rem;
+}
+
+.caballo-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.caballo-form input {
+    width: 100%;
+    padding: 0.5rem;
+    box-sizing: border-box;
+}
+.caballo-form button {
+    padding: 0.75rem 1.5rem;
+    background-color: #42b983;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+</style>
