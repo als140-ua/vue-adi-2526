@@ -4,6 +4,8 @@ import { getListaCaballos, deleteCaballo, getCaballoByText } from '../backend/ca
 import { getImagenesPorCaballo } from '../backend/imagenService.js'
 import { pb, SUPERUSER } from '../backend/pb.js'
 
+import { useRouter } from 'vue-router'
+
 /*
   Componente: ListaCaballos
   - Qué hace: muestra un listado de tarjetas de caballos consumiendo `caballoService` y `imagenService`.
@@ -80,6 +82,11 @@ const isSuperuserErr = computed(() => {
   return text.includes('superuser') || text.includes('superusuario') || text.includes('solo super') || text.includes('only super')
 })
 
+/**
+ * Navegación a la página de edición de un caballo
+ */
+const router = useRouter()
+
 async function loadCaballos() {
   loading.value = true
   error.value = null
@@ -107,6 +114,11 @@ async function loadCaballos() {
 
 function toggleDetalles(caballoId) {
   expandedCaballoId.value = expandedCaballoId.value === caballoId ? null : caballoId
+}
+
+async function editarCaballo(id) {
+  // Navegar a la ruta de edición del caballo
+  router.push(`/editar-caballo/${id}`)
 }
 
 async function eliminarCaballo(id) {
@@ -262,6 +274,7 @@ async function performSearch() {
                     <button @click="toggleDetalles(c.id)" class="btn-detalles">
                       {{ expandedCaballoId === c.id ? 'Ocultar detalles' : 'Detalles' }}
                     </button>
+                    <button @click="editarCaballo(c.id)" class="btn-editar">✎</button>
                     <button class="btn-eliminar" @click="eliminarCaballo(c.id)" title="Eliminar caballo">✕</button>
                   </div>
                 </div>
@@ -342,6 +355,8 @@ Grid de tarjetas de caballos
 .card-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 .btn-eliminar { padding: 0.45rem 0.8rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem; }
 .btn-eliminar:hover { background: #b02a37; }
+.btn-editar { padding:.45rem .8rem; background:#ffc107; color:#212529; border:none; border-radius:4px; cursor:pointer; font-size:0.95rem }
+.btn-editar:hover { background: #e0a800; }
 
 /* Responsividad: 2 cols under 1000px, 1 col under 640px */
 @media (max-width: 1000px) { .caballos-container { grid-template-columns: repeat(2, 1fr); } }

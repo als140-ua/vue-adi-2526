@@ -312,9 +312,12 @@ Acciones y botones
 .btn-detalles y .btn-eliminar son estilos visuales y tamaños.
 */
 .card-actions { display:flex; gap:.5rem; margin-top:.5rem }
-.btn-detalles { padding:.6rem 1.2rem; background:#007bff; color:#fff; border:none; border-radius:4px }
-.btn-editar { padding:.45rem .8rem; background:#ffc107; color:#212529; border:none; border-radius:4px }
-.btn-eliminar { padding:.45rem .8rem; background:#dc3545; color:#fff; border:none; border-radius:4px }
+.btn-detalles { padding:.6rem 1.2rem; background:#007bff; color:#fff; border:none; border-radius:4px; cursor:pointer }
+.btn-detalles:hover { background:#0056b3 }
+.btn-editar { padding:.45rem .8rem; background:#ffc107; color:#212529; border:none; border-radius:4px; cursor:pointer; font-size:0.95rem }
+.btn-editar:hover { background: #e0a800; }
+.btn-eliminar { padding:.45rem .8rem; background:#dc3545; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:0.95rem }
+.btn-eliminar:hover { background:#b02a37 }
 
 /*
 Panel de detalles expandible
