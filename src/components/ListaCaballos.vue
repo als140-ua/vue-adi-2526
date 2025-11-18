@@ -1,160 +1,41 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { getListaCaballos, deleteCaballo, getCaballoByText } from '../backend/caballoService.js'
-import { getImagenesPorCaballo } from '../backend/imagenService.js'
+import { onMounted } from 'vue'
 import { pb, SUPERUSER } from '../backend/pb.js'
-
 import { useRouter } from 'vue-router'
+import { useCaballosStore } from '../stores/caballosStore.js'
 
 /*
   Componente: ListaCaballos
-  - Qué hace: muestra un listado de tarjetas de caballos consumiendo `caballoService` y `imagenService`.
+  - Qué hace: muestra un listado de tarjetas de caballos consumiendo el store centralizado `useCaballosStore`.
     Permite buscar por nombre, paginar (9 tarjetas por página), expandir detalles inline y eliminar elementos.
   - Eventos procesados/generados: no emite eventos personalizados; procesa clicks locales (detalles, eliminar,
     navegación de páginas y búsqueda).
 
-  Estado (variables reactivas):
-  - caballos (ref, Array): lista completa de caballos recibida del backend (ordenada oldest->newest).
-  - loading (ref, Boolean): indicador de carga para mostrar estados intermedios.
-  - error (ref, String|null): contiene mensaje de error cuando ocurre alguno.
-  - expandedCaballoId (ref, String|null): id del caballo cuyo panel de detalles está abierto; null si ninguno.
-  - caballoImages (ref, Object): cache de imágenes por caballo: { [caballoId]: [imagenObj, ...] }.
-  - searchTerm (ref, String): texto de búsqueda introducido en la barra.
-  - pageSize (const, Number): tamaño de página (9 tarjetas por página).
-  - currentPage (ref, Number): página actual (1-based).
-  - pageDirection (ref, 'next'|'prev'): dirección de navegación para la animación de paginación.
+  Estado: Centralizado en `useCaballosStore` (Pinia)
+  - caballos: lista completa de caballos (ordenada oldest->newest)
+  - loading: indicador de carga
+  - error: mensaje de error si ocurre alguno
+  - expandedCaballoId: id del caballo cuyo panel de detalles está abierto
+  - caballoImages: cache de imágenes por caballo
+  - searchTerm: texto de búsqueda
+  - currentPage: página actual
+  - pageDirection: dirección de navegación
+  - totalPages, visibleCaballos, pageTransition, contentKey, isSuperuserErr: computeds
 
-  Computeds:
-  - totalPages (computed, Number): número total de páginas (calcula a partir de caballos.length).
-  - visibleCaballos (computed, Array): slice de `caballos` correspondiente a la página actual.
-
-  Métodos (descripción):
-  - loadCaballos(): async, no params. Carga la lista completa de caballos desde el servicio, invierte el
-    orden recibido para mostrar los más antiguos primero, y precarga imágenes para cada caballo. Actualiza
-    `caballos`, `caballoImages` y `loading`/`error` según corresponda.
-  - performSearch(): async, no params. Si `searchTerm` tiene texto llama a `getCaballoByText(term)`; si está vacío
-    recarga la lista completa. Al terminar resetea `currentPage` a 1 y precarga imágenes para los resultados.
-    Actualiza `caballos`, `caballoImages`, `loading` y `error`.
-  - toggleDetalles(caballoId): muestra/oculta el panel de detalles de la tarjeta con id `caballoId`. No es async.
-    Actualiza `expandedCaballoId`.
-  - eliminarCaballo(id): async, solicita confirmación con window.confirm, llama a `deleteCaballo(id)` y elimina
-    el elemento del array local `caballos`. Si la página actual queda vacía tras la eliminación, retrocede una
-    página cuando sea posible. Actualiza `caballos`, `caballoImages`, `expandedCaballoId`, `loading` y `error`.
-  - goPrev()/goNext(): cambios de página; actualizan `pageDirection` antes de modificar `currentPage` para que
-    la animación respete la dirección de navegación.
-  - getImageUrl(imagen): helper que construye la URL pública de una imagen usando `pb.baseUrl`.
-  - loginAsSuperuser(): método de ayuda en desarrollo que intenta autenticar al superuser (usa `SUPERUSER` desde `pb.js`)
+  Métodos disponibles en el store:
+  - loadCaballos(), performSearch(), toggleDetalles(), removeCaballo()
+  - goPrev(), goNext(), goPrevDirectional(), goNextDirectional()
 
   Props: ninguno.
 
 */
 
-const caballos = ref([])
-const loading = ref(false)
-const error = ref(null)
-const expandedCaballoId = ref(null)
-const caballoImages = ref({}) // { [caballoId]: [images...] }
-const searchTerm = ref('')
-const pageSize = 9
-const currentPage = ref(1)
-const pageDirection = ref('next') // 'next' | 'prev' — usado para cambiar la dirección de la animación
-
-const totalPages = computed(() => Math.max(1, Math.ceil(caballos.value.length / pageSize)))
-const visibleCaballos = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return caballos.value.slice(start, start + pageSize)
-})
-
-const pageTransition = computed(() => (pageDirection.value === 'next' ? 'page-next' : 'page-prev'))
-
-// computed key used to force out-in transitions when content state or page changes
-const contentKey = computed(() => {
-  if (loading.value) return 'loading'
-  if (error.value) return 'error'
-  if (caballos.value.length === 0) return 'empty'
-  return `page-${currentPage.value}`
-})
-
-// helper to detect superuser-related permission errors for the UI
-const isSuperuserErr = computed(() => {
-  if (!error.value) return false
-  const text = String(error.value).toLowerCase()
-  return text.includes('superuser') || text.includes('superusuario') || text.includes('solo super') || text.includes('only super')
-})
-
-/**
- * Navegación a la página de edición de un caballo
- */
+const store = useCaballosStore()
 const router = useRouter()
-
-async function loadCaballos() {
-  loading.value = true
-  error.value = null
-  try {
-    const lista = await getListaCaballos()
-    // Mostrar primero los más antiguos: invertir el orden que viene de la API (que devuelve newest->oldest)
-    caballos.value = lista.slice().reverse()
-    
-    // Precargar imágenes para cada caballo
-    for (const caballo of caballos.value) {
-      try {
-        const images = await getImagenesPorCaballo(caballo.id) // esto da un array
-        caballoImages.value[caballo.id] = images
-      } catch (err) {
-        console.warn(`No se pudieron cargar imágenes para caballo ${caballo.id}:`, err)
-        caballoImages.value[caballo.id] = []
-      }
-    }
-  } catch (err) {
-    error.value = err.message || String(err)
-  } finally {
-    loading.value = false
-  }
-}
-
-function toggleDetalles(caballoId) {
-  expandedCaballoId.value = expandedCaballoId.value === caballoId ? null : caballoId
-}
 
 async function editarCaballo(id) {
   // Navegar a la ruta de edición del caballo
   router.push(`/editar-caballo/${id}`)
-}
-
-async function eliminarCaballo(id) {
-  const ok = window.confirm('¿Eliminar este caballo? Esta acción no se puede deshacer.')
-  if (!ok) return
-  loading.value = true
-  try {
-    await deleteCaballo(id)
-    // quitar del listado localmente para evitar recarga completa
-    caballos.value = caballos.value.filter(c => c.id !== id)
-    delete caballoImages.value[id]
-    if (expandedCaballoId.value === id) expandedCaballoId.value = null
-    // si la página actual queda vacía tras borrar, retroceder una página si es posible
-    if (visibleCaballos.value.length === 0 && currentPage.value > 1) {
-      currentPage.value--
-    }
-  } catch (err) {
-    console.error('Error eliminando caballo:', err)
-    error.value = err.message || String(err)
-  } finally {
-    loading.value = false
-  }
-}
-
-function goPrev() { if (currentPage.value > 1) currentPage.value-- }
-function goNext() { if (currentPage.value < totalPages.value) currentPage.value++ }
-// Navigation helpers that also set animation direction
-function goPrevDirectional() {
-  if (currentPage.value <= 1) return
-  pageDirection.value = 'prev'
-  currentPage.value--
-}
-function goNextDirectional() {
-  if (currentPage.value >= totalPages.value) return
-  pageDirection.value = 'next'
-  currentPage.value++
 }
 
 function getImageUrl(imagen) {
@@ -164,8 +45,8 @@ function getImageUrl(imagen) {
 }
 
 async function loginAsSuperuser() {
-  loading.value = true
-  error.value = null
+  store.loading = true
+  store.error = null
   try {
     try {
       await pb.admins.authWithPassword(SUPERUSER.email, SUPERUSER.password)
@@ -173,48 +54,17 @@ async function loginAsSuperuser() {
     } catch (err) {
       console.error("Error autenticando superuser:", err)
     }
-    await loadCaballos()
+    await store.loadCaballos()
   } catch (err) {
-    error.value = err.message || String(err)
+    store.error = err.message || String(err)
   } finally {
-    loading.value = false
+    store.loading = false
   }
 }
 
 onMounted(() => {
-  loadCaballos()
+  store.loadCaballos()
 })
-
-// búsqueda: usa el servicio si hay texto, o recarga el listado completo
-async function performSearch() {
-  loading.value = true
-  error.value = null
-  try {
-    if (searchTerm.value && searchTerm.value.trim().length > 0) {
-      const lista = await getCaballoByText(searchTerm.value.trim())
-      caballos.value = lista.slice().reverse()
-    } else {
-      const lista = await getListaCaballos()
-      caballos.value = lista.slice().reverse()
-    }
-
-  // reset page to first
-  currentPage.value = 1
-  // precargar imágenes para los resultados
-    for (const caballo of caballos.value) {
-      try {
-        const images = await getImagenesPorCaballo(caballo.id)
-        caballoImages.value[caballo.id] = images
-      } catch (err) {
-        caballoImages.value[caballo.id] = []
-      }
-    }
-  } catch (err) {
-    error.value = err.message || String(err)
-  } finally {
-    loading.value = false
-  }
-}
 </script>
 
 <template>
@@ -224,21 +74,21 @@ async function performSearch() {
     <Transition name="search">
       <div class="search-row">
         <input 
-          v-model="searchTerm" 
-          @keyup.enter="performSearch" 
+          v-model="store.searchTerm" 
+          @keyup.enter="store.performSearch" 
           placeholder="Buscar caballos por nombre..." 
           class="search-input"
         />
-        <button class="btn search-btn" @click="performSearch">Buscar</button>
+        <button class="btn search-btn" @click="store.performSearch">Buscar</button>
       </div>
     </Transition>
 
-    <Transition :name="pageTransition" mode="out-in">
-      <div :key="contentKey">
-        <div v-if="loading">Cargando caballos...</div>
-        <div v-else-if="error" class="error">
-          <div>Error: {{ error }}</div>
-          <div v-if="isSuperuserErr">
+    <Transition :name="store.pageTransition" mode="out-in">
+      <div :key="store.contentKey">
+        <div v-if="store.loading">Cargando caballos...</div>
+        <div v-else-if="store.error" class="error">
+          <div>Error: {{ store.error }}</div>
+          <div v-if="store.isSuperuserErr">
             <small>Este recurso parece requerir permisos especiales (superuser).</small>
             <div>
               <button @click="loginAsSuperuser" class="btn">Login como admin (solo dev)</button>
@@ -246,10 +96,10 @@ async function performSearch() {
           </div>
         </div>
         <div v-else>
-          <div v-if="caballos.length === 0">No hay caballos disponibles.</div>
+          <div v-if="store.caballos.length === 0">No hay caballos disponibles.</div>
           <div v-else>
             <TransitionGroup name="list" tag="div" class="caballos-container">
-              <div v-for="c in visibleCaballos" :key="c.id" class="caballo-card" :class="{ expanded: expandedCaballoId === c.id }">
+              <div v-for="c in store.visibleCaballos" :key="c.id" class="caballo-card" :class="{ expanded: store.expandedCaballoId === c.id }">
                 <!-- Contenido existente de la tarjeta -->
                 <div class="card-content">
                   <div class="caballo-header">
@@ -257,9 +107,9 @@ async function performSearch() {
                       <h3>{{ c.nombre }}</h3>
                       <p v-if="c.descripcion" class="descripcion">{{ c.descripcion }}</p>
                     </div>
-                    <div v-if="caballoImages[c.id]?.length > 0" class="caballo-imagen">
+                    <div v-if="store.caballoImages[c.id]?.length > 0" class="caballo-imagen">
                       <img 
-                        :src="getImageUrl(caballoImages[c.id][0])" 
+                        :src="getImageUrl(store.caballoImages[c.id][0])" 
                         :alt="`Imagen de ${c.nombre}`" 
                         class="imagen-thumb"
                       >
@@ -271,17 +121,17 @@ async function performSearch() {
 
                   <!-- Botones: detalles + eliminar -->
                   <div class="card-actions">
-                    <button @click="toggleDetalles(c.id)" class="btn-detalles">
-                      {{ expandedCaballoId === c.id ? 'Ocultar detalles' : 'Detalles' }}
+                    <button @click="store.toggleDetalles(c.id)" class="btn-detalles">
+                      {{ store.expandedCaballoId === c.id ? 'Ocultar detalles' : 'Detalles' }}
                     </button>
                     <button @click="editarCaballo(c.id)" class="btn-editar">✎</button>
-                    <button class="btn-eliminar" @click="eliminarCaballo(c.id)" title="Eliminar caballo">✕</button>
+                    <button class="btn-eliminar" @click="store.removeCaballo(c.id)" title="Eliminar caballo">✕</button>
                   </div>
                 </div>
 
                 <!-- Panel expandible con detalles adicionales -->
                 <Transition name="details">
-                  <div v-if="expandedCaballoId === c.id" class="detalles-panel-overlay">
+                  <div v-if="store.expandedCaballoId === c.id" class="detalles-panel-overlay">
                     <div class="detalles-panel-content">
                       <div class="detalles-grid">
                         <div v-if="c.color" class="detalle-item">
@@ -325,10 +175,10 @@ async function performSearch() {
             </TransitionGroup>
 
             <!-- Paginación: flechas debajo de las tarjetas -->
-            <div class="pagination" v-if="totalPages > 1">
-              <button class="page-btn" @click="goPrevDirectional" :disabled="currentPage === 1">‹</button>
-              <span class="page-info">Página {{ currentPage }} / {{ totalPages }}</span>
-              <button class="page-btn" @click="goNextDirectional" :disabled="currentPage === totalPages">›</button>
+            <div class="pagination" v-if="store.totalPages > 1">
+              <button class="page-btn" @click="store.goPrevDirectional" :disabled="store.currentPage === 1">‹</button>
+              <span class="page-info">Página {{ store.currentPage }} / {{ store.totalPages }}</span>
+              <button class="page-btn" @click="store.goNextDirectional" :disabled="store.currentPage === store.totalPages">›</button>
             </div>
           </div>
         </div>
