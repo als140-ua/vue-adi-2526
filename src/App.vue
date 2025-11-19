@@ -1,37 +1,21 @@
 <script setup>
 import { RouterLink, RouterView, useRouter } from 'vue-router'
-import { logout } from './backend/userService'
-import { pb } from './backend/pb'
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useAuthStore } from './stores/authStore'
+import { onMounted} from 'vue'
 
 const router = useRouter()
-const isLoggedIn = ref(!!(pb?.authStore?.isValid))
-let unsubscribe
+const authStore = useAuthStore()
 
 onMounted(() => {
-  if (pb?.authStore?.onChange) {
-    unsubscribe = pb.authStore.onChange(() => {
-      isLoggedIn.value = !!pb.authStore.isValid
-    }, true)
-  } else {
-    isLoggedIn.value = !!(pb?.authStore?.isValid)
-  }
+  authStore.initAuth()
 })
-
-onBeforeUnmount(() => {
-  if (typeof unsubscribe === 'function') unsubscribe()
-})
-
-
 
 const handleLogout = async () => {
   try {
-    await logout()
-  } finally {
-    if (pb && pb.authStore && typeof pb.authStore.clear === 'function') {
-      pb.authStore.clear()
-    }
+    await authStore.logout()
     router.push('/login')
+  } catch (error) {
+    console.error('Error during logout:', error)
   }
 }
 </script>
@@ -44,8 +28,10 @@ const handleLogout = async () => {
         <RouterLink to="/noticias">Noticias</RouterLink>
         <RouterLink to="/crear-caballo">Crear Caballo</RouterLink>
         <RouterLink to="/crear-noticia">Crear Noticia</RouterLink>
-        <RouterLink v-if="!isLoggedIn" to="/login">Iniciar sesión</RouterLink>
-        <a v-else href="#" @click.prevent="handleLogout">Cerrar sesión</a>
+        <RouterLink v-if="!authStore.isLoggedIn" to="/login">Iniciar sesión</RouterLink>
+        <a v-else href="#" @click.prevent="handleLogout">
+          Cerrar sesión ({{ authStore.userName || authStore.userEmail }})
+        </a>
       </nav>
     </header>
 
