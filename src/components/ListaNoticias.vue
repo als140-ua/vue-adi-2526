@@ -1,33 +1,28 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { getListaNoticias, deleteNoticia, getNoticiaByTitulo } from '../backend/noticiaService.js'
-import { getImagenesPorNoticia } from '../backend/imagenService.js'
+import { onMounted } from 'vue'
 import { pb, SUPERUSER } from '../backend/pb.js'
-
 import { useRouter } from 'vue-router'
+import { useNoticiasStore } from '../stores/noticiasStore.js'
 
 /*
   Componente: ListaNoticias
   - Propósito: mostrar un listado paginado de noticias con búsqueda, detalles expandibles
     y eliminación. Precarga imágenes asociadas a cada noticia.
 
-  Estado (reactivo):
+  Estado: Centralizado en `useNoticiasStore` (Pinia)
   - noticias: Array de noticias cargadas desde el servicio (mostramos oldest->newest).
   - noticiasImages: cache de imágenes por noticia { [noticiaId]: [imagenObj,...] }.
   - loading: indicador booleano de carga global.
   - error: mensaje de error cuando ocurre alguno.
   - expandedNoticiaId: id de la noticia cuyo panel de detalles está abierto (o null).
   - searchTerm: texto de búsqueda para filtrar por título.
-  - pageSize: constante con tamaño de página (9).
   - currentPage: página actual (1-based).
   - pageDirection: 'next' | 'prev' — dirección de navegación para transiciones de página.
+  - totalPages, visibleNoticias, pageTransition, contentKey, isSuperuserErr: computeds
 
-  Computeds:
-  - totalPages: número total de páginas calculado desde noticias.length.
-  - visibleNoticias: slice de noticias correspondiente a la página actual.
-  - pageTransition: clase de transición dependiente de `pageDirection`.
-  - contentKey: clave que fuerza transiciones out-in según estado (loading/error/page).
-  - isSuperuserErr: helper booleano para detectar errores de permisos que requieran admin.
+  Métodos disponibles en el store:
+  - loadNoticias(), performSearch(), toggleDetalles(), removeNoticia()
+  - goPrev(), goNext(), goPrevDirectional(), goNextDirectional()
 
   Notas de diseño:
   - Usamos <Transition> y <TransitionGroup> para animar la búsqueda, el cambio de página,
@@ -35,105 +30,22 @@ import { useRouter } from 'vue-router'
   - Precargamos imágenes por noticia para evitar saltos de layout cuando se muestran.
 */
 
-const noticias = ref([])
-const noticiasImages = ref({})
-const loading = ref(false)
-const error = ref(null)
-const expandedNoticiaId = ref(null)
-const searchTerm = ref('')
-const pageSize = 9
-const currentPage = ref(1)
-const pageDirection = ref('next') // 'next' | 'prev' — usado para animación de páginas
-
-const totalPages = computed(() => Math.max(1, Math.ceil(noticias.value.length / pageSize)))
-const visibleNoticias = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return noticias.value.slice(start, start + pageSize)
-})
-
-const pageTransition = computed(() => (pageDirection.value === 'next' ? 'page-next' : 'page-prev'))
-
-// key para forzar out-in cuando cambian loading/error/página
-const contentKey = computed(() => {
-  if (loading.value) return 'loading'
-  if (error.value) return 'error'
-  if (noticias.value.length === 0) return 'empty'
-  return `page-${currentPage.value}`
-})
-
-const isSuperuserErr = computed(() => {
-  if (!error.value) return false
-  const text = String(error.value).toLowerCase()
-  return text.includes('superuser') || text.includes('superusuario') || text.includes('solo super') || text.includes('only super')
-})
-
-/**
- * Router para navegación entre páginas. Usado en editarNoticia para acceder 
- * a la vista de edición de la noticia correspondiente.
- */
+const store = useNoticiasStore()
 const router = useRouter()
-
-async function loadNoticias() {
-  loading.value = true
-  error.value = null
-  try {
-    const lista = await getListaNoticias()
-    // Mostrar primero los más antiguos: invertimos el array recibido
-    noticias.value = lista.slice().reverse()
-
-    // Precargar imágenes por noticia para evitar saltos visuales
-    for (const n of noticias.value) {
-      try {
-        const imgs = await getImagenesPorNoticia(n.id)
-        noticiasImages.value[n.id] = imgs
-      } catch (err) {
-        noticiasImages.value[n.id] = []
-      }
-    }
-  } catch (err) {
-    error.value = err.message || String(err)
-  } finally {
-    loading.value = false
-  }
-}
-
-function toggleDetalles(noticiaId) {
-  expandedNoticiaId.value = expandedNoticiaId.value === noticiaId ? null : noticiaId
-}
 
 async function editarNoticia(id) {
   // Navegar a la vista de edición de noticia
   router.push(`/editar-noticia/${id}`)
 }
 
-async function eliminarNoticia(id) {
-  const ok = window.confirm('¿Eliminar esta noticia?')
-  if (!ok) return
-  loading.value = true
-  try {
-    await deleteNoticia(id)
-    noticias.value = noticias.value.filter(n => n.id !== id)
-    if (expandedNoticiaId.value === id) expandedNoticiaId.value = null
-    delete noticiasImages.value[id]
-    // si la página actual queda vacía tras borrar, retroceder una página si es posible
-    if (visibleNoticias.value.length === 0 && currentPage.value > 1) {
-      currentPage.value--
-    }
-  } catch (err) {
-    console.error('Error eliminando noticia:', err)
-    error.value = err.message || String(err)
-  } finally {
-    loading.value = false
-  }
+function getNewsImageUrl(imagen) {
+  if (!imagen?.url) return null
+  return `${pb.baseUrl}/api/files/imagenes_noticias/${imagen.id}/${imagen.url}`
 }
 
-// navegación que también establece dirección para la animación
-function goPrevDirectional() { if (currentPage.value > 1) { pageDirection.value = 'prev'; currentPage.value-- } }
-function goNextDirectional() { if (currentPage.value < totalPages.value) { pageDirection.value = 'next'; currentPage.value++ } }
-
 async function loginAsSuperuser() {
-  loading.value = true
-  error.value = null
+  store.loading = true
+  store.error = null
   try {
     try {
       await pb.admins.authWithPassword(SUPERUSER.email, SUPERUSER.password)
@@ -141,53 +53,17 @@ async function loginAsSuperuser() {
     } catch (err) {
       console.error('Error autenticando superuser:', err)
     }
-    await loadNoticias()
+    await store.loadNoticias()
   } catch (err) {
-    error.value = err.message || String(err)
+    store.error = err.message || String(err)
   } finally {
-    loading.value = false
+    store.loading = false
   }
 }
 
 onMounted(() => {
-  loadNoticias()
+  store.loadNoticias()
 })
-
-// búsqueda por título (usa el método del servicio)
-async function performSearch() {
-  loading.value = true
-  error.value = null
-  try {
-    if (searchTerm.value && searchTerm.value.trim().length > 0) {
-      const lista = await getNoticiaByTitulo(searchTerm.value.trim())
-      noticias.value = lista.slice().reverse()
-    } else {
-      const lista = await getListaNoticias()
-      noticias.value = lista.slice().reverse()
-    }
-
-    // reset page to first
-    currentPage.value = 1
-    // precargar imágenes para los resultados
-    for (const n of noticias.value) {
-      try {
-        const imgs = await getImagenesPorNoticia(n.id)
-        noticiasImages.value[n.id] = imgs
-      } catch (err) {
-        noticiasImages.value[n.id] = []
-      }
-    }
-  } catch (err) {
-    error.value = err.message || String(err)
-  } finally {
-    loading.value = false
-  }
-}
-
-function getNewsImageUrl(imagen) {
-  if (!imagen?.url) return null
-  return `${pb.baseUrl}/api/files/imagenes_noticias/${imagen.id}/${imagen.url}`
-}
 
 </script>
 
@@ -199,22 +75,22 @@ function getNewsImageUrl(imagen) {
     <Transition name="search">
       <div class="search-row">
         <input
-          v-model="searchTerm"
-          @keyup.enter="performSearch"
+          v-model="store.searchTerm"
+          @keyup.enter="store.performSearch"
           placeholder="Buscar noticias por título..."
           class="search-input"
         />
-        <button class="btn search-btn" @click="performSearch">Buscar</button>
+        <button class="btn search-btn" @click="store.performSearch">Buscar</button>
       </div>
     </Transition>
 
     <!-- Cambio de página / contenido principal con animación dependiente de dirección -->
-    <Transition :name="pageTransition" mode="out-in">
-      <div :key="contentKey">
-        <div v-if="loading">Cargando noticias...</div>
-        <div v-else-if="error" class="error">
-          <div>Error: {{ error }}</div>
-          <div v-if="isSuperuserErr">
+    <Transition :name="store.pageTransition" mode="out-in">
+      <div :key="store.contentKey">
+        <div v-if="store.loading">Cargando noticias...</div>
+        <div v-else-if="store.error" class="error">
+          <div>Error: {{ store.error }}</div>
+          <div v-if="store.isSuperuserErr">
             <small>Este recurso parece requerir permisos especiales (superuser).</small>
             <div>
               <button @click="loginAsSuperuser" class="btn">Login como admin (solo dev)</button>
@@ -223,16 +99,16 @@ function getNewsImageUrl(imagen) {
         </div>
 
         <div v-else>
-          <div v-if="noticias.length === 0">No hay noticias disponibles.</div>
+          <div v-if="store.noticias.length === 0">No hay noticias disponibles.</div>
           <div v-else>
             <!-- Lista animada: entrada/salida de tarjetas -->
             <TransitionGroup name="list" tag="div" class="noticias-container">
-              <div v-for="n in visibleNoticias" :key="n.id" class="noticia-card" :class="{ expanded: expandedNoticiaId === n.id }">
+              <div v-for="n in store.visibleNoticias" :key="n.id" class="noticia-card" :class="{ expanded: store.expandedNoticiaId === n.id }">
                 <div class="card-content">
                   <div class="noticia-card-main">
                     <div class="noticia-image">
-                      <template v-if="noticiasImages[n.id] && noticiasImages[n.id].length">
-                        <img :src="getNewsImageUrl(noticiasImages[n.id][0])" :alt="`Imagen noticia ${n.titulo}`" />
+                      <template v-if="store.noticiasImages[n.id] && store.noticiasImages[n.id].length">
+                        <img :src="getNewsImageUrl(store.noticiasImages[n.id][0])" :alt="`Imagen noticia ${n.titulo}`" />
                       </template>
                       <div v-else class="noticia-imagen-placeholder">Sin imagen</div>
                     </div>
@@ -243,17 +119,17 @@ function getNewsImageUrl(imagen) {
                   </div>
 
                   <div class="card-actions">
-                    <button @click="toggleDetalles(n.id)" class="btn-detalles">
-                      {{ expandedNoticiaId === n.id ? 'Ocultar detalles' : 'Detalles' }}
+                    <button @click="store.toggleDetalles(n.id)" class="btn-detalles">
+                      {{ store.expandedNoticiaId === n.id ? 'Ocultar detalles' : 'Detalles' }}
                     </button>
                     <button @click="editarNoticia(n.id)" class="btn-editar">✎</button>
-                    <button class="btn-eliminar" @click="eliminarNoticia(n.id)">✕</button>
+                    <button class="btn-eliminar" @click="store.removeNoticia(n.id)">✕</button>
                   </div>
                 </div>
 
                 <!-- Panel expandible animado -->
                 <Transition name="details">
-                  <div v-if="expandedNoticiaId === n.id" class="detalles-panel-overlay">
+                  <div v-if="store.expandedNoticiaId === n.id" class="detalles-panel-overlay">
                     <div class="detalles-panel-content">
                       <div class="detalles-grid">
                         <div class="detalle-item">
@@ -268,10 +144,10 @@ function getNewsImageUrl(imagen) {
             </TransitionGroup>
 
             <!-- Paginación debajo de las tarjetas (directional) -->
-            <div class="pagination" v-if="totalPages > 1">
-              <button class="page-btn" @click="goPrevDirectional" :disabled="currentPage === 1">‹</button>
-              <span class="page-info">Página {{ currentPage }} / {{ totalPages }}</span>
-              <button class="page-btn" @click="goNextDirectional" :disabled="currentPage === totalPages">›</button>
+            <div class="pagination" v-if="store.totalPages > 1">
+              <button class="page-btn" @click="store.goPrevDirectional" :disabled="store.currentPage === 1">‹</button>
+              <span class="page-info">Página {{ store.currentPage }} / {{ store.totalPages }}</span>
+              <button class="page-btn" @click="store.goNextDirectional" :disabled="store.currentPage === store.totalPages">›</button>
             </div>
           </div>
         </div>
