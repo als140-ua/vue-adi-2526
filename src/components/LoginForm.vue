@@ -1,27 +1,22 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { pb, SUPERUSER } from '../backend/pb';
-import { login } from '../backend/userService.js';
+import { useAuthStore } from '../stores/authStore';
 
 
 const router = useRouter();
 const email = ref('');
 const password = ref('');
-const loading = ref(false);
-const errorMsg = ref('');
+const authStore = useAuthStore();
 
 const handleLogin = async () => {
-    loading.value = true;
-    errorMsg.value = '';
+    authStore.clearError();
     try {
-        await login(email.value, password.value);
+        await authStore.login(email.value, password.value);
         router.push('/');
     } catch (error) {
-        errorMsg.value = 'Login failed: ' + error.message;
-    } finally {
-        loading.value = false;
-    }
+        console.error('Error durante el inicio de sesión:', error);
+    } 
     
 };
 
@@ -42,12 +37,12 @@ const handleLogin = async () => {
                     <input type="password" id="password" v-model="password" required />
                 </div>
 
-                <button type="submit" class="submit-btn" :disabled="loading">
-                    <span v-if="!loading">Acceder</span>
+                <button type="submit" class="submit-btn" :disabled="authStore.loading">
+                    <span v-if="!authStore.loading">Acceder</span>
                     <span v-else>Cargando…</span>
                 </button>
 
-                <div v-if="errorMsg" class="error">{{ errorMsg }}</div>
+                <div v-if="authStore.error" class="error">{{ authStore.error }}</div>
             </form>
         </div>
     </div>
