@@ -35,5 +35,3 @@ coverage
 # Vitest
 __screenshots__/
 
-# Base datos
-src/backend/pb.js
