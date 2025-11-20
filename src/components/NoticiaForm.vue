@@ -1,6 +1,7 @@
 <script setup>
 
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
+import { useCaballosStore } from '../stores/caballosStore.js';
 
 const emit = defineEmits(['submit'])
 
@@ -13,11 +14,22 @@ const props = defineProps({
   disabled: { type: Boolean, default: false },
 })
 
+// Inicializar el store
+const caballosStore = useCaballosStore()
+
 const form = ref({
   titulo: '',
   contenido: '',
   fecha: '',
-  url_video: ''
+  url_video: '',
+  caballo_id: ''
+})
+
+onMounted(async () => {
+  // Cargar caballos si no están ya cargados
+  if (caballosStore.caballos.length === 0) {
+    await caballosStore.loadCaballos()
+  }
 })
 
 function applyInitial(data) {
@@ -58,6 +70,20 @@ function onSubmit() {
       <div>
         <label for="url_video">URL del Video:</label>
         <input type="url" id="url_video" v-model="form.url_video" />
+      </div>
+
+      <div>
+        <label for="Caballo relacionado">Caballo relacionado:</label>
+        <select id="caballo" v-model="form.caballo_id">
+           <option value="">Ninguno</option>
+          <option 
+            v-for="caballo in caballosStore.caballos" 
+            :key="caballo.id" 
+            :value="caballo.id"
+          >
+            {{ caballo.nombre }}
+          </option>
+        </select>
       </div>
 
       <button type="submit" :disabled="disabled">{{ submitLabel }}</button>
@@ -102,4 +128,11 @@ function onSubmit() {
     border-radius: 4px;
     cursor: pointer;
 }
+
+.noticia-form select {
+    width: 100%;
+    padding: 0.5rem;
+    box-sizing: border-box;
+}
+
 </style>
