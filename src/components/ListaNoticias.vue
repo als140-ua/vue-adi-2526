@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { pb, SUPERUSER } from '../backend/pb.js'
 import { useRouter } from 'vue-router'
 import { useNoticiasStore } from '../stores/noticiasStore.js'
+import { useAuthStore } from '../stores/authStore.js'
 
 /*
   Componente: ListaNoticias
@@ -32,6 +33,7 @@ import { useNoticiasStore } from '../stores/noticiasStore.js'
 
 const store = useNoticiasStore()
 const router = useRouter()
+const authStore = useAuthStore()
 
 async function editarNoticia(id) {
   // Navegar a la vista de edición de noticia
@@ -63,6 +65,7 @@ async function loginAsSuperuser() {
 
 onMounted(() => {
   store.loadNoticias()
+  authStore.initAuth()
 })
 
 </script>
@@ -122,8 +125,8 @@ onMounted(() => {
                     <button @click="store.toggleDetalles(n.id)" class="btn-detalles">
                       {{ store.expandedNoticiaId === n.id ? 'Ocultar detalles' : 'Detalles' }}
                     </button>
-                    <button @click="editarNoticia(n.id)" class="btn-editar">✎</button>
-                    <button class="btn-eliminar" @click="store.removeNoticia(n.id)">✕</button>
+                    <button v-if="authStore.isAdmin" @click="editarNoticia(n.id)" class="btn-editar">✎</button>
+                    <button v-if="authStore.isAdmin" class="btn-eliminar" @click="store.removeNoticia(n.id)">✕</button>
                   </div>
                 </div>
 

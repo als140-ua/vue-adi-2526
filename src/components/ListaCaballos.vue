@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { pb, SUPERUSER } from '../backend/pb.js'
 import { useRouter } from 'vue-router'
 import { useCaballosStore } from '../stores/caballosStore.js'
+import { useAuthStore } from '../stores/authStore.js'
 
 /*
   Componente: ListaCaballos
@@ -32,6 +33,7 @@ import { useCaballosStore } from '../stores/caballosStore.js'
 
 const store = useCaballosStore()
 const router = useRouter()
+const authStore = useAuthStore()
 
 async function editarCaballo(id) {
   // Navegar a la ruta de edición del caballo
@@ -64,6 +66,7 @@ async function loginAsSuperuser() {
 
 onMounted(() => {
   store.loadCaballos()
+  authStore.initAuth()
 })
 </script>
 
@@ -124,8 +127,8 @@ onMounted(() => {
                     <button @click="store.toggleDetalles(c.id)" class="btn-detalles">
                       {{ store.expandedCaballoId === c.id ? 'Ocultar detalles' : 'Detalles' }}
                     </button>
-                    <button @click="editarCaballo(c.id)" class="btn-editar">✎</button>
-                    <button class="btn-eliminar" @click="store.removeCaballo(c.id)" title="Eliminar caballo">✕</button>
+                    <button v-if="authStore.isAdmin" @click="editarCaballo(c.id)" class="btn-editar">✎</button>
+                    <button v-if="authStore.isAdmin" class="btn-eliminar" @click="store.removeCaballo(c.id)" title="Eliminar caballo">✕</button>
                   </div>
                 </div>
 
