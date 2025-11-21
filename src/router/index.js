@@ -42,6 +42,11 @@ const router = createRouter({
       path: '/editar-noticia/:id',
       name: 'editar-noticia',
       component: () => import('../views/EditarNoticia.vue'),
+    },
+    {
+      path: '/crear-pedigri',
+      name: 'crear-pedigri',
+      component: () => import('../views/CrearPedigri.vue'),
     }
   ],
 })

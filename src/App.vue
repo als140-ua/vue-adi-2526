@@ -28,6 +28,7 @@ const handleLogout = async () => {
         <RouterLink to="/noticias">Noticias</RouterLink>
         <RouterLink to="/crear-caballo">Crear Caballo</RouterLink>
         <RouterLink to="/crear-noticia">Crear Noticia</RouterLink>
+        <RouterLink to="/crear-pedigri">Crear Pedigrí</RouterLink>
         <RouterLink v-if="!authStore.isLoggedIn" to="/login">Iniciar sesión</RouterLink>
         <a v-else href="#" @click.prevent="handleLogout">
           Cerrar sesión ({{ authStore.userName || authStore.userEmail }})

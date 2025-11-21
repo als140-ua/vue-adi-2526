@@ -1,0 +1,136 @@
+<script setup>
+
+import { ref, onMounted } from 'vue';
+import { useCaballosStore } from '../stores/caballosStore.js';
+import { createPedigri, getCaballoById } from '../backend/caballoService.js';
+import router from '@/router/index.js';
+
+
+const emit = defineEmits(['submit'])
+
+// Inicializar el store
+const caballosStore = useCaballosStore()
+
+const form = ref({
+    id_caballo: '',
+    id_ascendiente: '',
+    nombre_ascendiente: '',
+    tipo_relacion: ''
+})
+
+onMounted(async () => {
+  // Cargar caballos si no están ya cargados
+  if (caballosStore.caballos.length === 0) {
+    await caballosStore.loadCaballos()
+  }
+})
+
+const handleCreatePedigri = async () => {
+    
+    try{
+
+        const caballoAscendiente = await getCaballoById(form.value.id_ascendiente)
+        form.value.nombre_ascendiente = caballoAscendiente.nombre
+    }catch(e){
+        alert('Error durante la recuperación del nombre del ascendiente')
+        console.error(e)
+    }
+
+    if(form.value.nombre_ascendiente){
+        try{
+            await createPedigri(form.value)
+            alert('Pedigri creado con éxito')
+            router.push('/')
+        }catch(e){
+            alert('Error al crear el pedigrí')
+        }
+    }else{
+        alert('No se recuperó el nombre del ascendiente')
+    }
+}
+
+</script>
+
+<template>
+    <form @submit.prevent="handleCreatePedigri" class="pedigri-form">
+        <div>
+            <label for="idCaballo" class="label-pedigri">Id del caballo:</label>
+            <select id="caballo" v-model="form.id_caballo">
+                <option value="">Ninguno</option>
+                <option 
+                    v-for="caballo in caballosStore.caballos" 
+                    :key="caballo.id" 
+                    :value="caballo.id"
+                >
+                    {{ caballo.nombre }}
+                </option>
+            </select>
+        </div>
+
+        <div>
+            <label for="idAscendiente" class="label-pedigri">Id del ascendiente:</label>
+            <select id="ascendiente" v-model="form.id_ascendiente">
+                <option value="">Ninguno</option>
+                <option 
+                    v-for="caballo in caballosStore.caballos" 
+                    :key="caballo.id" 
+                    :value="caballo.id"
+                >
+                    {{ caballo.nombre }}
+                </option>
+            </select>
+        </div>
+
+        <div>
+            <label for="relacionCaballos" class="label-pedigri">Tipo de relación:</label>
+            <select id="relacion" v-model="form.tipo_relacion">
+                <option value="Padre">Padre</option>
+                <option value="Madre">Madre</option>
+                <option value="Abuelo paterno">Abuelo paterno</option>
+                <option value="Abuela paterna">Abuela paterna</option>
+                <option value="Abuelo materno">Abuelo materno</option>
+                <option value="Abuela materna">Abuela materna</option>
+            </select>
+        </div>
+
+        <button type="submit" class="submit-btn" :disabled="caballosStore.loading">
+            <span v-if="!caballosStore.loading">Crear</span>
+            <span v-else>Cargando…</span>
+        </button>
+    </form>
+</template>
+
+<style scoped>
+.pedigri-form {
+    min-width: 500px;
+    margin: auto;
+}
+
+.pedigri-form div {
+    margin-bottom: 1rem;
+}
+
+.pedigri-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.submit-btn {
+    padding: 0.5rem 1rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pedigri-form select {
+    width: 100%;
+    padding: 0.5rem;
+    box-sizing: border-box;
+}
+
+
+
+</style>
