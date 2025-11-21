@@ -52,8 +52,10 @@ const handleCreatePedigri = async () => {
 </script>
 
 <template>
-    <form @submit.prevent="handleCreatePedigri" class="pedigri-form">
-        <div>
+        <Transition name="content" mode="out-in" appear>
+            <div key="pedigri-form-content">
+                <form @submit.prevent="handleCreatePedigri" class="pedigri-form">
+                        <div>
             <label for="idCaballo" class="label-pedigri">Id del caballo:</label>
             <select id="caballo" v-model="form.id_caballo">
                 <option value="">Ninguno</option>
@@ -97,7 +99,9 @@ const handleCreatePedigri = async () => {
             <span v-if="!caballosStore.loading">Crear</span>
             <span v-else>Cargando…</span>
         </button>
-    </form>
+                </form>
+            </div>
+        </Transition>
 </template>
 
 <style scoped>
@@ -105,6 +109,11 @@ const handleCreatePedigri = async () => {
     min-width: 500px;
     margin: auto;
 }
+
+/* Transitions for mount/unmount of the form content */
+.content-enter-active, .content-leave-active, .content-appear-active { transition: all 0.4s ease; }
+.content-enter-from, .content-appear-from { opacity: 0; transform: translateY(20px); }
+.content-leave-to { opacity: 0; transform: translateY(-20px); }
 
 .pedigri-form div {
     margin-bottom: 1rem;

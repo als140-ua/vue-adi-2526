@@ -47,7 +47,9 @@ function onSubmit() {
 <template>
   <div class="caballo-form">
     <h2>Formulario de Caballo</h2>
-    <form @submit.prevent="onSubmit">
+    <Transition name="content" mode="out-in" appear>
+      <div key="caballo-form-content">
+        <form @submit.prevent="onSubmit">
       <div>
         <label for="nombre">Nombre:</label>
         <input type="text" id="nombre" v-model="form.nombre" required />
@@ -103,8 +105,10 @@ function onSubmit() {
         <input type="text" id="hogar" v-model="form.hogar" required />
       </div>
 
-      <button type="submit" :disabled="disabled">{{ submitLabel }}</button>
-    </form>
+          <button type="submit" :disabled="disabled">{{ submitLabel }}</button>
+        </form>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -113,6 +117,11 @@ function onSubmit() {
     min-width: 500px;
     margin: auto;
 }
+
+/* Transitions for mount/unmount of the form content */
+.content-enter-active, .content-leave-active, .content-appear-active { transition: all 0.4s ease; }
+.content-enter-from, .content-appear-from { opacity: 0; transform: translateY(20px); }
+.content-leave-to { opacity: 0; transform: translateY(-20px); }
 
 .caballo-form div {
     margin-bottom: 1rem;

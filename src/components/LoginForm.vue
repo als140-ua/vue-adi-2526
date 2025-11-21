@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 
@@ -9,41 +9,74 @@ const email = ref('');
 const password = ref('');
 const authStore = useAuthStore();
 
-const handleLogin = async () => {
-    authStore.clearError();
-    try {
-        await authStore.login(email.value, password.value);
-        router.push('/');
-    } catch (error) {
-        console.error('Error durante el inicio de sesión:', error);
-    } 
-    
+const shake = ref(false)
+const formRef = ref(null)
+
+// activar temblor cuando hay error en el store
+watch(() => authStore.error, (val) => {
+  if (val) {
+    shake.value = true
+    // duración del efecto (ligeramente mayor que la animación)
+    setTimeout(() => { shake.value = false }, 600)
+  }
+})
+
+async function handleLogin() {
+  authStore.clearError();
+  try {
+    await authStore.login(email.value, password.value);
+    router.push('/');
+  } catch (error) {
+    // activar el temblor inmediatamente también para respuesta instantánea
+    shake.value = true
+    setTimeout(() => { shake.value = false }, 600)
+    console.error('Error durante el inicio de sesión:', error);
+  } 
 };
+
+function onFormSubmit(e) {
+  // si el navegador detecta campos inválidos, el evento submit no se dispara;
+  // aquí comprobamos manualmente la validez para forzar la animación y mostrar mensajes.
+  if (formRef.value) {
+    if (!formRef.value.checkValidity()) {
+      formRef.value.reportValidity()
+      shake.value = true
+      setTimeout(() => { shake.value = false }, 600)
+      return
+    }
+  }
+  // campos válidos -> intentar login
+  handleLogin()
+}
 
 </script>
 
 <template>
     <div class="login-page">
         <div class="login-form">
-            <h2>Login</h2>
-            <form @submit.prevent="handleLogin">
+                <h2>Login</h2>
+                <Transition name="content" mode="out-in" appear>
+                  <div key="login-form-content">
+                    <form ref="formRef" @submit.prevent="onFormSubmit" :class="{ shake }">
                 <div>
                     <label for="email" class="label-login">Email</label>
-                    <input type="email" id="email" v-model="email" required />
+                    <input class="input" type="email" id="email" v-model="email" required />
                 </div>
 
                 <div>
                     <label for="password" class="label-login">Password</label>
-                    <input type="password" id="password" v-model="password" required />
+                    <input class="input" type="password" id="password" v-model="password" required />
                 </div>
 
-                <button type="submit" class="submit-btn" :disabled="authStore.loading">
-                    <span v-if="!authStore.loading">Acceder</span>
-                    <span v-else>Cargando…</span>
+                <button @click.prevent="onFormSubmit" type="submit" class="submit-btn" :disabled="authStore.loading">
+                  <span v-if="!authStore.loading">Acceder</span>
+                  <span v-else>Cargando…</span>
                 </button>
 
-                <div v-if="authStore.error" class="error">{{ authStore.error }}</div>
-            </form>
+                  <div v-if="authStore.error" class="error">{{ authStore.error }}</div>
+                </form>
+              </div>
+            </Transition>
         </div>
     </div>
 </template>
@@ -59,6 +92,11 @@ const handleLogin = async () => {
   box-sizing: border-box;
   background: transparent;
 }
+
+/* Transitions for form mount/unmount */
+.content-enter-active, .content-leave-active, .content-appear-active { transition: all 0.4s ease; }
+.content-enter-from, .content-appear-from { opacity: 0; transform: translateY(20px); }
+.content-leave-to { opacity: 0; transform: translateY(-20px); }
 
 /* Tarjeta del formulario */
 .login-card {
@@ -125,6 +163,22 @@ const handleLogin = async () => {
 
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+/* Shake animation on error */
+.shake .input,
+.shake .submit-btn {
+  animation: shake 0.48s cubic-bezier(.36,.07,.19,.97);
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  10% { transform: translateX(-8px); }
+  30% { transform: translateX(8px); }
+  50% { transform: translateX(-6px); }
+  70% { transform: translateX(6px); }
+  90% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
 
 /* Mensaje de error */
 .error {
