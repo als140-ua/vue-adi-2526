@@ -26,9 +26,12 @@ const handleLogout = async () => {
       <nav class="main-nav">
         <RouterLink to="/">Caballos</RouterLink>
         <RouterLink to="/noticias">Noticias</RouterLink>
-        <RouterLink to="/crear-caballo">Crear Caballo</RouterLink>
-        <RouterLink to="/crear-noticia">Crear Noticia</RouterLink>
-        <RouterLink to="/crear-pedigri">Crear Pedigrí</RouterLink>
+        <template v-if="authStore.isAdmin">
+          <RouterLink to="/crear-caballo">Crear Caballo</RouterLink>
+          <RouterLink to="/crear-noticia">Crear Noticia</RouterLink>
+          <RouterLink to="/crear-pedigri">Crear Pedigrí</RouterLink>
+        </template>
+
         <RouterLink v-if="!authStore.isLoggedIn" to="/login">Iniciar sesión</RouterLink>
         <a v-else href="#" @click.prevent="handleLogout">
           Cerrar sesión ({{ authStore.userName || authStore.userEmail }})
