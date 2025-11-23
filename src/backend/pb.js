@@ -5,6 +5,6 @@ import PocketBase from "pocketbase";
 export const pb = new PocketBase("http://127.0.0.1:8090");
 
 export const SUPERUSER = {
-  email: "superuser@ua.es",
-  password: "superuser1"
+  email: "alr135@alu.ua.es",
+  password: "-qcTpc1xwdftA6X"
 };
