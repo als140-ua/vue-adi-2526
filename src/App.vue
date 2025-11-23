@@ -21,79 +21,106 @@ const handleLogout = async () => {
 </script>
 
 <template>
-  <div class="app-container">
-    <header class="main-header">
+  <div class="layout">
+  <header class="main-header">
       <nav class="main-nav">
-        <RouterLink to="/">Caballos</RouterLink>
-        <RouterLink to="/noticias">Noticias</RouterLink>
-        <template v-if="authStore.isAdmin">
-          <RouterLink to="/crear-caballo">Crear Caballo</RouterLink>
-          <RouterLink to="/crear-noticia">Crear Noticia</RouterLink>
-          <RouterLink to="/crear-pedigri">Crear Pedigrí</RouterLink>
-        </template>
-
-        <RouterLink v-if="!authStore.isLoggedIn" to="/login">Iniciar sesión</RouterLink>
-        <a v-else href="#" @click.prevent="handleLogout">
-          Cerrar sesión ({{ authStore.userName || authStore.userEmail }})
-        </a>
+        <div class="nav-left">
+          
+          <RouterLink to="">🏇 UMA</RouterLink> 
+          <RouterLink to="/">Caballos</RouterLink>
+          <RouterLink to="/noticias">Noticias</RouterLink>
+          <template v-if="authStore.isAdmin">
+            <RouterLink to="/crear-caballo">Crear Caballo</RouterLink>
+            <RouterLink to="/crear-noticia">Crear Noticia</RouterLink>
+            <RouterLink to="/crear-pedigri">Crear Pedigrí</RouterLink>
+          </template>
+        </div>
+        <div class="nav-right">
+          <RouterLink v-if="!authStore.isLoggedIn" to="/login">Iniciar sesión</RouterLink>
+          <a v-else href="#" @click.prevent="handleLogout">
+            Cerrar sesión ({{ authStore.userName || authStore.userEmail }})
+          </a>
+        </div>
       </nav>
     </header>
-
+  
+  <div class="app-container">
     <main class="main-content">
       <RouterView />
     </main>
   </div>
+  </div>
 </template>
 
 <style scoped>
-.app-container {
-  min-height: 100vh;
+.layout {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
 }
 
 .main-header {
-  background: #f8f9fa;
-  padding: 0;
-  border-bottom: 1px solid #dee2e6;
   width: 100%;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-sizing: border-box;
 }
 
 .main-nav {
   display: flex;
   width: 100%;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   background: #f8f9fa;
+}
+
+.nav-left {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.nav-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  padding-right: 0.6rem;
 }
 
 .main-nav a {
   text-decoration: none;
   color: #495057;
   font-weight: 500;
-  padding: 1rem 1.5rem;
-  transition: all 0.3s ease;
+  padding: 1rem 1.2rem;
   border-bottom: 3px solid transparent;
-  display: block;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .main-nav a:hover {
-  background-color: #e9ecef;
-  color: #212529;
+  background:#e9ecef;
 }
 
 .main-nav a.router-link-active {
-  color: #42b883;
-  background-color: #fff;
-  border-bottom-color: #42b883;
+  color:#42b883;
+  border-bottom-color:#42b883;
+  background:#fff;
 }
 
 .main-content {
   flex: 1;
   padding: 2rem;
-  width: 100%;
   box-sizing: border-box;
+  width: 100%;
+}
+
+.app-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  margin: 0 auto;
 }
 </style>
