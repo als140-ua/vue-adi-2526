@@ -49,51 +49,43 @@ function onSubmit() {
 </script>
 
 <template>
-  <div class="noticia-form">
-    <h2>Formulario de Noticia</h2>
+  <div class="noticia-form card shadow-sm p-4">
+    <h2 class="h4 mb-3">Formulario de Noticia</h2>
     <Transition name="content" mode="out-in" appear>
       <div key="noticia-form-content">
         <form @submit.prevent="onSubmit">
-      <div>
-        <label for="titulo">Título:</label>
-        <input type="text" id="titulo" v-model="form.titulo" required />
-      </div>
-
-      <div>
-        <label for="contenido">Contenido:</label>
-        <textarea id="contenido" v-model="form.contenido" required></textarea>
-      </div>
-
-      <div>
-        <label for="fecha">Fecha:</label>
-        <input type="date" id="fecha" v-model="form.fecha" required />
-      </div>
-
-      <div>
-        <label for="url_video">URL del Video:</label>
-        <input type="url" id="url_video" v-model="form.url_video" />
-      </div>
-
-      <div>
-        <label for="Caballo relacionado">Caballo relacionado:</label>
-        <select id="caballo" v-model="form.caballo_id">
-           <option value="">Ninguno</option>
-          <option 
-            v-for="caballo in caballosStore.caballos" 
-            :key="caballo.id" 
-            :value="caballo.id"
-          >
-            {{ caballo.nombre }}
-          </option>
-        </select>
-      </div>
-
-          <button type="submit" :disabled="disabled">{{ submitLabel }}</button>
+          <div class="mb-3">
+            <label for="titulo" class="form-label">Título</label>
+            <input class="form-control" type="text" id="titulo" v-model="form.titulo" required />
+          </div>
+          <div class="mb-3">
+            <label for="contenido" class="form-label">Contenido</label>
+            <textarea class="form-control" id="contenido" v-model="form.contenido" rows="4" required></textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="fecha" class="form-label">Fecha</label>
+              <input class="form-control" type="date" id="fecha" v-model="form.fecha" required />
+            </div>
+            <div class="col-md-8 mb-3">
+              <label for="url_video" class="form-label">URL Video</label>
+              <input class="form-control" type="url" id="url_video" v-model="form.url_video" />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Caballo relacionado</label>
+            <select class="form-select" v-model="form.caballo_id">
+              <option value="">Ninguno</option>
+              <option v-for="caballo in caballosStore.caballos" :key="caballo.id" :value="caballo.id">
+                {{ caballo.nombre }}
+              </option>
+            </select>
+          </div>
+          <button type="submit" :disabled="disabled" class="btn btn-success w-100">{{ submitLabel }}</button>
         </form>
       </div>
     </Transition>
   </div>
-
 </template>
 
 <style scoped>

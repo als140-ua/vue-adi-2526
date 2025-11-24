@@ -52,33 +52,30 @@ function onFormSubmit(e) {
 </script>
 
 <template>
-    <div class="login-page">
-        <div class="login-form">
-                <h2>Login</h2>
-                <Transition name="content" mode="out-in" appear>
-                  <div key="login-form-content">
-                    <form ref="formRef" @submit.prevent="onFormSubmit" :class="{ shake }">
-                <div>
-                    <label for="email" class="label-login">Email</label>
-                    <input class="input" type="email" id="email" v-model="email" required />
-                </div>
-
-                <div>
-                    <label for="password" class="label-login">Password</label>
-                    <input class="input" type="password" id="password" v-model="password" required />
-                </div>
-
-                <button @click.prevent="onFormSubmit" type="submit" class="submit-btn" :disabled="authStore.loading">
-                  <span v-if="!authStore.loading">Acceder</span>
-                  <span v-else>Cargando…</span>
-                </button>
-
-                  <div v-if="authStore.error" class="error">{{ authStore.error }}</div>
-                </form>
-              </div>
-            </Transition>
+  <div class="login-page">
+    <div class="login-card card shadow-sm p-4">
+      <h2 class="h5 mb-3 text-center">Login</h2>
+      <Transition name="content" mode="out-in" appear>
+        <div key="login-form-content">
+          <form ref="formRef" @submit.prevent="onFormSubmit" :class="{ shake }" novalidate>
+            <div class="mb-3">
+              <label for="email" class="form-label label-login">Email</label>
+              <input class="form-control input" type="email" id="email" v-model="email" required />
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label label-login">Password</label>
+              <input class="form-control input" type="password" id="password" v-model="password" required />
+            </div>
+            <button type="submit" class="btn btn-success w-100 submit-btn" :disabled="authStore.loading">
+              <span v-if="!authStore.loading">Acceder</span>
+              <span v-else>Cargando…</span>
+            </button>
+            <div v-if="authStore.error" class="error mt-2">{{ authStore.error }}</div>
+          </form>
         </div>
+      </Transition>
     </div>
+  </div>
 </template>
 
 <style scoped>
