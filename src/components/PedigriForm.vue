@@ -54,7 +54,7 @@ const handleCreatePedigri = async () => {
 <template>
   <Transition name="content" mode="out-in" appear>
     <div key="pedigri-form-content" class="card shadow-sm p-4">
-      <h2 class="h5 mb-3">Crear Pedigrí</h2>
+      <h2 class="h4 mb-3">Crear Pedigrí</h2>
       <form @submit.prevent="handleCreatePedigri" class="pedigri-form">
         <div class="mb-3">
           <label class="form-label" for="caballo">Caballo</label>

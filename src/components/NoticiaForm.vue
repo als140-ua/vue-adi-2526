@@ -49,9 +49,9 @@ function onSubmit() {
 </script>
 
 <template>
-  <div class="noticia-form card shadow-sm p-4">
+  <Transition name="content" mode="out-in" appear>
+    <div class="noticia-form card shadow-sm p-4">
     <h2 class="h4 mb-3">Formulario de Noticia</h2>
-    <Transition name="content" mode="out-in" appear>
       <div key="noticia-form-content">
         <form @submit.prevent="onSubmit">
           <div class="mb-3">
@@ -84,8 +84,8 @@ function onSubmit() {
           <button type="submit" :disabled="disabled" class="btn btn-success w-100">{{ submitLabel }}</button>
         </form>
       </div>
-    </Transition>
-  </div>
+    </div>
+  </Transition>
 </template>
 
 <style scoped>

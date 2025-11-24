@@ -52,10 +52,10 @@ function onFormSubmit(e) {
 </script>
 
 <template>
-  <div class="login-page">
-    <div class="login-card card shadow-sm p-4">
-      <h2 class="h5 mb-3 text-center">Login</h2>
-      <Transition name="content" mode="out-in" appear>
+  <Transition name="content" mode="out-in" appear>
+    <div class="login-page">
+      <div class="login-card card shadow-sm p-4">
+        <h2 class="h5 mb-3 text-center">Login</h2>
         <div key="login-form-content">
           <form ref="formRef" @submit.prevent="onFormSubmit" :class="{ shake }" novalidate>
             <div class="mb-3">
@@ -73,9 +73,9 @@ function onFormSubmit(e) {
             <div v-if="authStore.error" class="error mt-2">{{ authStore.error }}</div>
           </form>
         </div>
-      </Transition>
+      </div>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <style scoped>

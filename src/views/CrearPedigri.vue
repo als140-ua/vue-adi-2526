@@ -5,7 +5,6 @@ import PedigriForm from '../components/PedigriForm.vue';
 
 <template>
     <div>
-        <h1>Crear nuevo pedigrí</h1>
         <PedigriForm />
     </div>
 </template>

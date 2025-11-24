@@ -45,71 +45,67 @@ function onSubmit() {
 
 
 <template>
-  <div class="caballo-form">
-    <h2>Formulario de Caballo</h2>
-    <Transition name="content" mode="out-in" appear>
+  <Transition name="content" mode="out-in" appear>
+    <div class="caballo-form card shadow-sm p-4">
+      <h2 class="h4 mb-3">Formulario de Caballo</h2>
       <div key="caballo-form-content">
         <form @submit.prevent="onSubmit">
-      <div>
-        <label for="nombre">Nombre:</label>
-        <input type="text" id="nombre" v-model="form.nombre" required />
-      </div>
-
-      <div>
-        <label for="descripcion">Descripcion:</label>
-        <input type="text" id="descripcion" v-model="form.descripcion" required />
-      </div>
-
-      <div>
-        <label for="descripcionLarga">Descripcion larga:</label>
-        <input type="text" id="descripcionLarga" v-model="form.descripcion_larga" required />
-      </div>
-
-      <div>
-        <label for="color">Color:</label>
-        <input type="text" id="color" v-model="form.color" required />
-      </div>
-
-      <div> 
-        <label for="sexo">Sexo:</label>
-        <input type="text" id="sexo" v-model="form.sexo" required />
-      </div>
-      
-      <div>
-        <label for="fechaNacimiento">Fecha de Nacimiento:</label>
-        <input type="date" id="fechaNacimiento" v-model="form.fecha_nacimiento" />
-      </div>
-
-      <div>
-        <label for="fechaRetiro">Fecha de Retiro:</label>
-        <input type="date" id="fechaRetiro" v-model="form.fecha_retiramiento" />
-      </div>
-
-      <div>
-        <label for="fechaFallecimiento">Fecha de Fallecimiento:</label>
-        <input type="date" id="fechaFallecimiento" v-model="form.fecha_fallecimiento" />
-      </div>
-
-      <div>
-        <label for="duenyo">Dueño:</label>
-        <input type="text" id="duenyo" v-model="form.duenyo" required />
-      </div>
-
-      <div>
-        <label for="entrenador">Entrenador:</label>
-        <input type="text" id="entrenador" v-model="form.entrenador" required />
-      </div>
-
-      <div>
-        <label for="hogar">Hogar:</label>
-        <input type="text" id="hogar" v-model="form.hogar" required />
-      </div>
-
-          <button type="submit" :disabled="disabled">{{ submitLabel }}</button>
+          <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre</label>
+            <input class="form-control" type="text" id="nombre" v-model="form.nombre" required />
+          </div>
+          <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <input class="form-control" type="text" id="descripcion" v-model="form.descripcion" required />
+          </div>
+          <div class="mb-3">
+            <label for="descripcionLarga" class="form-label">Descripción larga</label>
+            <textarea class="form-control" id="descripcionLarga" v-model="form.descripcion_larga" rows="3" required></textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="color" class="form-label">Color</label>
+              <input class="form-control" type="text" id="color" v-model="form.color" required />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="sexo" class="form-label">Sexo</label>
+              <input class="form-control" type="text" id="sexo" v-model="form.sexo" required />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="fechaNacimiento" class="form-label">Nacimiento</label>
+              <input class="form-control" type="date" id="fechaNacimiento" v-model="form.fecha_nacimiento" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="fechaRetiro" class="form-label">Retiro</label>
+              <input class="form-control" type="date" id="fechaRetiro" v-model="form.fecha_retiramiento" />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="fechaFallecimiento" class="form-label">Fallecimiento</label>
+              <input class="form-control" type="date" id="fechaFallecimiento" v-model="form.fecha_fallecimiento" />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="duenyo" class="form-label">Dueño</label>
+              <input class="form-control" type="text" id="duenyo" v-model="form.duenyo" required />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="entrenador" class="form-label">Entrenador</label>
+              <input class="form-control" type="text" id="entrenador" v-model="form.entrenador" required />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="hogar" class="form-label">Hogar</label>
+              <input class="form-control" type="text" id="hogar" v-model="form.hogar" required />
+            </div>
+          </div>
+          <button type="submit" :disabled="disabled" class="btn btn-success w-100">{{ submitLabel }}</button>
         </form>
       </div>
-    </Transition>
-  </div>
+
+    </div>
+  </Transition>
 </template>
 
 <style scoped>
