@@ -3,6 +3,46 @@ import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 
+/**
+ * Componente: LoginForm
+ *  - ¿Qué hace?: Proporciona un formulario de inicio de sesión para que los usuarios
+ *    puedan autenticarse en la aplicación. Gestiona la entrada del usuario y maneja
+ *    el proceso de autenticación mediante el store de autenticación.
+ * - Eventos procesados/generados: Maneja el evento de envío del formulario para
+ *   iniciar sesión. No emite eventos personalizados.
+ * Estado: Local (ref):
+ *  - email: Almacena el email ingresado por el usuario.
+ *  - password: Almacena la contraseña ingresada por el usuario.
+ *  - shake: Controla la animación de temblor en caso de error de autenticación.
+ * Estados: Distribuido (AuthStore):
+ *  - authStore: Store de autenticación que maneja el estado de login, logout,
+ *    errores y carga.
+ *      
+ *    Propiedades disponibles en la store:
+ *    + user: Información del usuario autenticado.
+ *    + isLoggedIn: Indica si el usuario está loggeado o no
+ *    + error: Mensaje de error de autenticación, si existe
+ *    + loading: Indica si una operación de autenticación está en curso
+ *    + userEmail: Email del usuario autenticado
+ *    + userName: Nombre del usuario autenticado
+ *    + userRole: Rol del usuario autenticado
+ *    + isAdmin: Incica si el usuario actual es administrador o no
+ * 
+ *    Métodos disponibles en la store:
+ *    + initAuth: Inicializa desde PocketBase al store
+ *    + login: Llama al userSevice para autenticar si el usuario
+ *    existe y en caso de correcto inciar sesión
+ *    + logout: Cierra la sesión activa
+ *    + clearError: Borra el error actual que esté almacenado en la authStore
+ * 
+ * Notas de diseño:
+ *  - Se han usado para layout y estilos varias clases de Bootstrap (card, row,
+ *    col, form-control).
+ *  - El formulario es un componente controlado, por lo que todos los campos están
+ *    vinculados a un estado local reactivo.
+ *  - Usamos <Transition> y <TransitionGroup> para animar la carga de la tarjeta de
+ *    Bootstrap en la que se encuentra el formulario.  
+ */
 
 const router = useRouter();
 const email = ref('');

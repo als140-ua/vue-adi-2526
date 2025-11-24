@@ -2,17 +2,51 @@
 
 import { ref, watch } from 'vue';
 
+/**
+ * Componente: CaballoForm
+ *    - ¿Qué hace?: Se trata de un formulario reutilizable para la edición y creación 
+ *      de los caballos. Mediante los datos del formularios, en las respectivas vistas de 
+ *      de CrearCaballo y EditarCaballo se envía una petición al backend para que sea
+ *      procesada
+ *    - Eventos procesados/generados: Generará un evento al pulsar el botón de submit que
+ *      posteriormente será capturado por la correspondiente vista. Procesará los campos
+ *      de entrada para ver si están vacios o no junto con los valores ya existentes de un
+ *      caballo que recibirá al cargarse desde la vista de EditarCaballo para ser cargados
+ *      en los correspondientes campos
+ * Estado: Local (ref) :
+ *    - form: Objeto que contiene los campos del formulario que posteriormente se pasarán
+ *      a la correspondiente vista para que esta lo procese. Este contiene todas las
+ *      propiedades del caballo:
+ *          nombre, descripcion, descripcion_larga, color, sexo,
+ *          fecha_nacimiento, fecha_retiramiento, fecha_fallecimiento,
+ *          duenyo, entrenador, hogar.
+ *      Se actualiza vía v-model y se fusiona con initial si se recibe.
+ * Notas de diseño:
+ *    - Se han usado para layout y estilos varias clases de Bootstrap (card, row, 
+ *      col, form-control). 
+ *    - El formulario es un componente controlado, por lo que todos los campos están
+ *      vinculados al estado local `form` mediante `v-model`.
+ *    - El componente acepta una prop `initial` para inicializar los campos del formulario,
+ *      usado principalmente para la edición
+ *    - Usamos <Transition> y <TransitionGroup> para animar la carga de la tarjeta de
+ *      Bootstrap en la que se encuentra el formulario.
+ *    
+ */
+
+// Definición de eventos emitidos por el componente
 const emit = defineEmits(['submit'])
 
+// Definición de props recibidas por el componente
 const props = defineProps({
-  // Datos iniciales para modo "editar"
+  // Carga los datos iniciales para modo "editar"
   initial: { type: Object, default: () => ({}) },
-  // Texto del botón
+  // Texto del botón de submit
   submitLabel: { type: String, default: 'Guardar' },
   // Deshabilitar el submit desde fuera si hace falta
   disabled: { type: Boolean, default: false },
 })
 
+// Estado local del formulario. Almacena los datos dael caballo
 const form = ref({
   nombre: '',
   descripcion: '',
@@ -27,7 +61,7 @@ const form = ref({
   hogar: '',
 })
 
-
+// Carga los datos iniciales de un caballo para la edición
 function applyInitial(data) {
   if (!data) return
   form.value = { ...form.value, ...data }
@@ -37,6 +71,7 @@ function applyInitial(data) {
 applyInitial(props.initial)
 watch(() => props.initial, (val) => applyInitial(val), { deep: true })
 
+// Maneja el envío del formulario
 function onSubmit() {
   // JSON-ready payload
   emit('submit', { ...form.value })
