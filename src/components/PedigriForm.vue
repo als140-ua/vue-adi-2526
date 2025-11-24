@@ -5,6 +5,53 @@ import { useCaballosStore } from '../stores/caballosStore.js';
 import { createPedigri, getCaballoById } from '../backend/caballoService.js';
 import router from '@/router/index.js';
 
+/**
+ * Componente: PedigriForm
+ *   - ¿Qué hace?: Se trata de un formulario reutilizable para la creación
+ *    de los pedigrís. Mediante los datos del formularios, en la vista de
+ *    CrearPedigri se envía una petición al backend para que sea
+ *    procesada.
+ *  - Eventos procesados/generados: Generará un evento al pulsar el botón de submit que
+ *    posteriormente será capturado en el propio componente. Procesará los campos
+ *    de entrada para ver si están vacios o no.
+ * Estado: Local (ref) :
+ *  - form: Objeto que contiene los campos del formulario que posteriormente se pasarán
+ *    a la correspondiente vista para que esta lo procese. Este contiene todas las
+ *    propiedades del pedigrí:
+ *      id_caballo, id_ascendiente, nombre_ascendiente, tipo_relacion
+ *    Se actualiza vía v-model.  
+ * Estado: Distribuido (caballosStore [Pinia]):
+ *  - caballosStore: Store que contiene la lista de caballos disponibles en el sistema.
+ *    Se usa para poblar el select del caballo al que se le quiere añadir el pedigrí, 
+ *    junto con el select del ascendiente.
+ * 
+ *    Propiedades disponibles en la store:
+ *      + caballos: lista completa de caballos (ordenada oldest->newest)
+ *      + loading: indicador de carga
+ *      + error: mensaje de error si ocurre alguno
+ *      + expandedCaballoId: id del caballo cuyo panel de detalles está abierto
+ *      + caballoImages: cache de imágenes por caballo
+ *      + searchTerm: texto de búsqueda
+ *      + currentPage: página actual
+ *      + pageDirection: dirección de navegación
+ *      + totalPages, visibleCaballos, pageTransition, contentKey, isSuperuserErr: computeds
+ *      
+ *      Métodos disponibles en la store:
+ *        - loadCaballos(), performSearch(), toggleDetalles(), removeCaballo()
+ *        - goPrev(), goNext(), goPrevDirectional(), goNextDirectional()
+ * 
+ *     Nota sobre la store:
+ *        Solamente se usa dentro de este componente la propiedad caballos y el método
+ *        loadCaballos para tener los caballos cargados en los selects del formulario.
+ * 
+ * Notas de diseño:
+ *  - Se han usado para layout y estilos varias clases de Bootstrap (card, row,
+ *    col, form-control).
+ *  - El formulario es un componente controlado, por lo que todos los campos están
+ *    vinculados a un estado local reactivo.
+ *  - Usamos <Transition> y <TransitionGroup> para animar la carga de la tarjeta de
+ *    Bootstrap en la que se encuentra el formulario.
+ */
 
 const emit = defineEmits(['submit'])
 

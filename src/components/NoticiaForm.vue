@@ -3,8 +3,61 @@
 import { ref, watch, onMounted } from 'vue';
 import { useCaballosStore } from '../stores/caballosStore.js';
 
+/**
+ * Componente: NoticiaForm
+ *    - ¿Qué hace?: Se trata de un formulario reutilizable para la edición y creación 
+ *      de las noticias. Mediante los datos del formularios, en las respectivas vistas de 
+ *      de CrearNoticia y EditarNoticia se envía una petición al backend para que sea
+ *      procesada
+ *    - Eventos procesados/generados: Generará un evento al pulsar el botón de submit que
+ *      posteriormente será capturado por la correspondiente vista. Procesará los campos
+ *      de entrada para ver si están vacios o no junto con los valores ya existentes de un
+ *      noticia que recibirá al cargarse desde la vista de EditarNoticia para ser cargados
+ *      en los correspondientes campos
+ * Estado: Local (ref) :
+ *    - form: Objeto que contiene los campos del formulario que posteriormente se pasarán
+ *      a la correspondiente vista para que esta lo procese. Este contiene todas las
+ *      propiedades de la noticia:
+ *          titulo, contenido, fecha, url_video, caballo_id
+ *      Se actualiza vía v-model y se fusiona con initial si se recibe.
+ * Estado: Distribuido (caballosStore [Pinia]) : 
+ *    - caballosStore: Store que contiene la lista de caballos disponibles en el sistema.
+ *      Se usa para poblar el select de caballos relacionados en el formulario.
+ * 
+ *      Propiedades disponibles en la store:
+ *      + caballos: lista completa de caballos (ordenada oldest->newest)
+ *      + loading: indicador de carga
+ *      + error: mensaje de error si ocurre alguno
+ *      + expandedCaballoId: id del caballo cuyo panel de detalles está abierto
+ *      + caballoImages: cache de imágenes por caballo
+ *      + searchTerm: texto de búsqueda
+ *      + currentPage: página actual
+ *      + pageDirection: dirección de navegación
+ *      + totalPages, visibleCaballos, pageTransition, contentKey, isSuperuserErr: computeds
+ *      
+ *      Métodos disponibles en la store:
+ *        - loadCaballos(), performSearch(), toggleDetalles(), removeCaballo()
+ *        - goPrev(), goNext(), goPrevDirectional(), goNextDirectional()
+ * 
+ *     Nota sobre la store:
+ *        Solamente se usa dentro de este componente la propiedad caballos y el método
+ *        loadCaballos para tener los caballos cargados en el select del formulario
+ *        usado para indicar a que caballo se encuentra relacionada la noticia.
+ *      
+ * Notas de diseño:
+ *    - Se han usado para layout y estilos varias clases de Bootstrap (card, row,
+ *      col, form-control).
+ *    - El formulario es un componente controlado, por lo que todos los campos están
+ *      vinculados a un estado local reactivo.
+ *    - El componente acepta una prop `initial` para inicializar los campos del formulario,
+ *    - Usamos <Transition> y <TransitionGroup> para animar la carga de la tarjeta de
+ *      Bootstrap en la que se encuentra el formulario.
+ */
+
+// Definición de eventos emitidos por el componente
 const emit = defineEmits(['submit'])
 
+// Definición de props recibidas por el componente
 const props = defineProps({
   // Datos iniciales para modo "editar"
   initial: { type: Object, default: () => ({}) },
@@ -17,6 +70,7 @@ const props = defineProps({
 // Inicializar el store
 const caballosStore = useCaballosStore()
 
+// Estado local del formulario. Almacena los datos de la noticia
 const form = ref({
   titulo: '',
   contenido: '',
@@ -25,6 +79,7 @@ const form = ref({
   caballo_id: ''
 })
 
+// Se cargan los caballos al cargar el componente
 onMounted(async () => {
   // Cargar caballos si no están ya cargados
   if (caballosStore.caballos.length === 0) {
@@ -32,6 +87,7 @@ onMounted(async () => {
   }
 })
 
+// Carga inicial de datos en el formulario
 function applyInitial(data) {
   if (!data) return
   form.value = { ...form.value, ...data }
@@ -41,6 +97,7 @@ function applyInitial(data) {
 applyInitial(props.initial)
 watch(() => props.initial, (val) => applyInitial(val), { deep: true })
 
+// Maneja el envío del formulario
 function onSubmit() {
   // JSON-ready payload
   emit('submit', { ...form.value })
