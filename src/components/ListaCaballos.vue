@@ -72,7 +72,7 @@ onMounted(() => {
 
 <template>
   <section class="lista-caballos">
-    <h2>Listado de caballos</h2>
+    <h2 style="color:aliceblue">Listado de caballos</h2>
 
     <Transition name="search">
       <div class="search-row">

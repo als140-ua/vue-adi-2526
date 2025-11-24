@@ -72,7 +72,7 @@ onMounted(() => {
 
 <template>
   <section class="lista-noticias">
-    <h2>Listado de noticias</h2>
+    <h2 style="color:aliceblue">Listado de noticias</h2>
 
     <!-- Barra de búsqueda animada -->
     <Transition name="search">

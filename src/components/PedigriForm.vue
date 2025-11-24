@@ -52,56 +52,49 @@ const handleCreatePedigri = async () => {
 </script>
 
 <template>
-        <Transition name="content" mode="out-in" appear>
-            <div key="pedigri-form-content">
-                <form @submit.prevent="handleCreatePedigri" class="pedigri-form">
-                        <div>
-            <label for="idCaballo" class="label-pedigri">Id del caballo:</label>
-            <select id="caballo" v-model="form.id_caballo">
-                <option value="">Ninguno</option>
-                <option 
-                    v-for="caballo in caballosStore.caballos" 
-                    :key="caballo.id" 
-                    :value="caballo.id"
-                >
-                    {{ caballo.nombre }}
-                </option>
-            </select>
+  <Transition name="content" mode="out-in" appear>
+    <div key="pedigri-form-content" class="card shadow-sm p-4">
+      <h2 class="h4 mb-3">Crear Pedigrí</h2>
+      <form @submit.prevent="handleCreatePedigri" class="pedigri-form">
+        <div class="mb-3">
+          <label class="form-label" for="caballo">Caballo</label>
+          <select id="caballo" class="form-select" v-model="form.id_caballo">
+            <option value="">Ninguno</option>
+            <option v-for="caballo in caballosStore.caballos" :key="caballo.id" :value="caballo.id">
+              {{ caballo.nombre }}
+            </option>
+          </select>
         </div>
-
-        <div>
-            <label for="idAscendiente" class="label-pedigri">Id del ascendiente:</label>
-            <select id="ascendiente" v-model="form.id_ascendiente">
-                <option value="">Ninguno</option>
-                <option 
-                    v-for="caballo in caballosStore.caballos" 
-                    :key="caballo.id" 
-                    :value="caballo.id"
-                >
-                    {{ caballo.nombre }}
-                </option>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label" for="ascendiente">Ascendiente</label>
+            <select id="ascendiente" class="form-select" v-model="form.id_ascendiente">
+              <option value="">Ninguno</option>
+              <option v-for="caballo in caballosStore.caballos" :key="caballo.id" :value="caballo.id">
+                {{ caballo.nombre }}
+              </option>
             </select>
-        </div>
-
-        <div>
-            <label for="relacionCaballos" class="label-pedigri">Tipo de relación:</label>
-            <select id="relacion" v-model="form.tipo_relacion">
-                <option value="Padre">Padre</option>
-                <option value="Madre">Madre</option>
-                <option value="Abuelo paterno">Abuelo paterno</option>
-                <option value="Abuela paterna">Abuela paterna</option>
-                <option value="Abuelo materno">Abuelo materno</option>
-                <option value="Abuela materna">Abuela materna</option>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label" for="tipo_relacion">Tipo relación</label>
+            <select id="tipo_relacion" class="form-select" v-model="form.tipo_relacion">
+              <option value="">Seleccione</option>
+              <option value="Padre">Padre</option>
+              <option value="Madre">Madre</option>
+              <option value="Abuelo paterno">Abuelo paterno</option>
+              <option value="Abuela paterna">Abuela paterna</option>
+              <option value="Abuelo materno">Abuelo materno</option>
+              <option value="Abuela materna">Abuela materna</option>
             </select>
+          </div>
         </div>
-
-        <button type="submit" class="submit-btn" :disabled="caballosStore.loading">
-            <span v-if="!caballosStore.loading">Crear</span>
-            <span v-else>Cargando…</span>
+        <button type="submit" class="btn btn-primary w-100" :disabled="caballosStore.loading">
+          <span v-if="!caballosStore.loading">Crear</span>
+          <span v-else>Cargando…</span>
         </button>
-                </form>
-            </div>
-        </Transition>
+      </form>
+    </div>
+  </Transition>
 </template>
 
 <style scoped>
