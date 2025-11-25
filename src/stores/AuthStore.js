@@ -14,7 +14,10 @@ export const useAuthStore = defineStore('auth', () => {
   const userEmail = computed(() => user.value?.email ?? '')
   const userName = computed(() => user.value?.nombre ?? '')
   const userRole = computed(() => user.value?.rol ?? 'usuario')
-  const isAdmin = computed(() => userRole.value === 'admin' || userRole.value === 'superuser')
+  // isAdmin -> true only for users explicitly in the 'admin' role.
+  // Previously a different elevated role was treated as admin; that special-case
+  // behavior is no longer applied.
+  const isAdmin = computed(() => userRole.value === 'admin')
 
   // Acciones
   function initAuth() {

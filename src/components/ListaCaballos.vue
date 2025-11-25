@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted } from 'vue'
-import { pb, SUPERUSER } from '../backend/pb.js'
+import { pb } from '../backend/pb.js'
 import { useRouter } from 'vue-router'
 import { useCaballosStore } from '../stores/caballosStore.js'
 import { useAuthStore } from '../stores/authStore.js'
@@ -21,7 +21,7 @@ import { useAuthStore } from '../stores/authStore.js'
   - searchTerm: texto de búsqueda
   - currentPage: página actual
   - pageDirection: dirección de navegación
-  - totalPages, visibleCaballos, pageTransition, contentKey, isSuperuserErr: computeds
+  - totalPages, visibleCaballos, pageTransition, contentKey, isAdminRequiredErr: computeds
 
   Métodos disponibles en el store:
   - loadCaballos(), performSearch(), toggleDetalles(), removeCaballo()
@@ -46,16 +46,17 @@ function getImageUrl(imagen) {
   return `${pb.baseUrl}/api/files/imagenes/${imagen.id}/${imagen.url}`
 }
 
-async function loginAsSuperuser() {
+async function reloadCaballosForDev() {
   store.loading = true
   store.error = null
   try {
-    try {
-      await pb.admins.authWithPassword(SUPERUSER.email, SUPERUSER.password)
-      console.log("Superuser autenticado para tests")
-    } catch (err) {
-      console.error("Error autenticando superuser:", err)
-    }
+    // try {
+    //   // pb.admins.authWithPassword(<DEV_EMAIL>, <DEV_PASSWORD>)
+    //   // console.log('Dev account authenticated for tests')
+    // } catch (err) {
+    //   // console.error('Error authenticating dev account:', err)
+    // }
+
     await store.loadCaballos()
   } catch (err) {
     store.error = err.message || String(err)
@@ -91,10 +92,10 @@ onMounted(() => {
         <div v-if="store.loading">Cargando caballos...</div>
         <div v-else-if="store.error" class="error">
           <div>Error: {{ store.error }}</div>
-          <div v-if="store.isSuperuserErr">
-            <small>Este recurso parece requerir permisos especiales (superuser).</small>
+          <div v-if="store.isAdminRequiredErr">
+            <small>Este recurso parece requerir permisos especiales (administrador).</small>
             <div>
-              <button @click="loginAsSuperuser" class="btn">Login como admin (solo dev)</button>
+              <button @click="reloadCaballosForDev" class="btn">Recargar contenido (solo dev)</button>
             </div>
           </div>
         </div>

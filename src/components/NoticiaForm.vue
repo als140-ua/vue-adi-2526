@@ -33,7 +33,7 @@ import { useCaballosStore } from '../stores/caballosStore.js';
  *      + searchTerm: texto de búsqueda
  *      + currentPage: página actual
  *      + pageDirection: dirección de navegación
- *      + totalPages, visibleCaballos, pageTransition, contentKey, isSuperuserErr: computeds
+ *      + totalPages, visibleCaballos, pageTransition, contentKey, isAdminRequiredErr: computeds
  *      
  *      Métodos disponibles en la store:
  *        - loadCaballos(), performSearch(), toggleDetalles(), removeCaballo()

@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted } from 'vue'
-import { pb, SUPERUSER } from '../backend/pb.js'
+import { pb } from '../backend/pb.js'
 import { useRouter } from 'vue-router'
 import { useNoticiasStore } from '../stores/noticiasStore.js'
 import { useAuthStore } from '../stores/authStore.js'
@@ -19,7 +19,7 @@ import { useAuthStore } from '../stores/authStore.js'
   - searchTerm: texto de búsqueda para filtrar por título.
   - currentPage: página actual (1-based).
   - pageDirection: 'next' | 'prev' — dirección de navegación para transiciones de página.
-  - totalPages, visibleNoticias, pageTransition, contentKey, isSuperuserErr: computeds
+  - totalPages, visibleNoticias, pageTransition, contentKey, isAdminRequiredErr: computeds
 
   Métodos disponibles en el store:
   - loadNoticias(), performSearch(), toggleDetalles(), removeNoticia()
@@ -45,16 +45,19 @@ function getNewsImageUrl(imagen) {
   return `${pb.baseUrl}/api/files/imagenes_noticias/${imagen.id}/${imagen.url}`
 }
 
-async function loginAsSuperuser() {
+async function reloadNoticiasForDev() {
   store.loading = true
   store.error = null
   try {
-    try {
-      await pb.admins.authWithPassword(SUPERUSER.email, SUPERUSER.password)
-      console.log('Superuser autenticado para tests')
-    } catch (err) {
-      console.error('Error autenticando superuser:', err)
-    }
+    // previous dev-only auth (commented out):
+    // try {
+    //   // pb.admins.authWithPassword(<DEV_EMAIL>, <DEV_PASSWORD>)
+    //   // console.log('Dev account authenticated for tests')
+    // } catch (err) {
+    //   // console.error('Error authenticating dev account:', err)
+    // }
+
+    // simply reload noticias without attempting dev-only auth
     await store.loadNoticias()
   } catch (err) {
     store.error = err.message || String(err)
@@ -91,12 +94,12 @@ onMounted(() => {
     <Transition :name="store.pageTransition" mode="out-in">
       <div :key="store.contentKey">
         <div v-if="store.loading">Cargando noticias...</div>
-        <div v-else-if="store.error" class="error">
+          <div v-else-if="store.error" class="error">
           <div>Error: {{ store.error }}</div>
-          <div v-if="store.isSuperuserErr">
-            <small>Este recurso parece requerir permisos especiales (superuser).</small>
+          <div v-if="store.isAdminRequiredErr">
+            <small>Este recurso parece requerir permisos especiales (administrador).</small>
             <div>
-              <button @click="loginAsSuperuser" class="btn">Login como admin (solo dev)</button>
+              <button @click="reloadNoticiasForDev" class="btn">Recargar contenido (solo dev)</button>
             </div>
           </div>
         </div>

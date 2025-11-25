@@ -32,10 +32,19 @@ export const useCaballosStore = defineStore('caballos', () => {
     return `page-${currentPage.value}`
   })
 
-  const isSuperuserErr = computed(() => {
+  // Detects error messages implying admin-only / permission problems.
+  // Avoid the deprecated/speculative elevated-role phrasing.
+  const isAdminRequiredErr = computed(() => {
     if (!error.value) return false
     const text = String(error.value).toLowerCase()
-    return text.includes('superuser') || text.includes('superusuario') || text.includes('solo super') || text.includes('only super')
+    return (
+      text.includes('admin') ||
+      text.includes('administrador') ||
+      text.includes('permiso') ||
+      text.includes('permission') ||
+      text.includes('only admin') ||
+      text.includes('solo admin')
+    )
   })
 
   // Acciones
@@ -156,7 +165,7 @@ export const useCaballosStore = defineStore('caballos', () => {
     visibleCaballos,
     pageTransition,
     contentKey,
-    isSuperuserErr,
+    isAdminRequiredErr,
     loadCaballos,
     performSearch,
     toggleDetalles,

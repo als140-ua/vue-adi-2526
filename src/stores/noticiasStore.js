@@ -32,10 +32,21 @@ export const useNoticiasStore = defineStore('noticias', () => {
     return `page-${currentPage.value}`
   })
 
-  const isSuperuserErr = computed(() => {
+  // Detects error messages implying admin-only / permission problems.
+  // Renamed to avoid the former special-case naming that referenced an elevated role.
+  const isAdminRequiredErr = computed(() => {
     if (!error.value) return false
     const text = String(error.value).toLowerCase()
-    return text.includes('superuser') || text.includes('superusuario') || text.includes('solo super') || text.includes('only super')
+    // be more generic: detect references to admin/administrator or permission-only messages
+    return (
+      text.includes('admin') ||
+      text.includes('administrador') ||
+      text.includes('permiso') ||
+      text.includes('permission') ||
+      text.includes('only admin') ||
+      text.includes('solo admin') ||
+      text.includes('only administrators')
+    )
   })
 
   // Acciones
@@ -156,7 +167,7 @@ export const useNoticiasStore = defineStore('noticias', () => {
     visibleNoticias,
     pageTransition,
     contentKey,
-    isSuperuserErr,
+    isAdminRequiredErr,
     loadNoticias,
     performSearch,
     toggleDetalles,
